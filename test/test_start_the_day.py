@@ -13,6 +13,11 @@ import unittest
 from unittest.mock import patch
 
 # Import the module under test
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
+
 from start_the_day import (
     get_config_path,
     parse_toml_simple,

@@ -10,7 +10,7 @@ authors = [
 ]
 
 [project.scripts]
-start-the-day = "start_the_day:main"
+start-the-day = "src.start_the_day:main"
 
 [tool.pyright]
 pythonVersion = "3.13"

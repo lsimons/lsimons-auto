@@ -29,13 +29,13 @@ This:
 
 ```bash
 # Using uv (recommended)
-uv run start_the_day.py
+uv run src/start_the_day.py
 
 # Run the daily routine
-python3 start_the_day.py
+python3 src/start_the_day.py
 
 # Force run even if already executed today
-python3 start_the_day.py --force
+python3 src/start_the_day.py --force
 ```
 
 ## Configuration
@@ -63,23 +63,23 @@ After installation, the script runs automatically via macOS LaunchAgent:
 
 - See [AGENT.md](AGENT.md) for development guidelines and agent instructions
 - See [DESIGN.md](DESIGN.md) for architectural decisions and design rationale
-- Run tests after changes: `uv run pytest`
+- Run tests after changes: `uv run pytest test/`
 
 ## Testing
 
-Unit tests are located in `test_start_the_day.py`. Run them using any of these methods:
+Unit tests are located in `test/test_start_the_day.py`. Run them using any of these methods:
 
 ```bash
 # Using uv with pytest (recommended)
-uv run pytest
+uv run pytest test/
 
 # Using uv with specific test file
-uv run pytest test_start_the_day.py
+uv run pytest test/test_start_the_day.py
 
 # Direct execution (legacy)
-python3 test_start_the_day.py
+python3 test/test_start_the_day.py
 ```
 
 ## Customization
 
-Modify the `start_the_day()` function in `start_the_day.py` to add your own daily startup tasks.
+Modify the `start_the_day()` function in `src/start_the_day.py` to add your own daily startup tasks.

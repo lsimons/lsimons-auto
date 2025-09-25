@@ -16,9 +16,9 @@ from pathlib import Path
 
 def install_symlink() -> None:
     """Install the start-the-day symlink."""
-    # Get the absolute path to start_the_day.py in the same directory as this script
+    # Get the absolute path to start_the_day.py in the src directory
     script_dir = Path(__file__).parent.absolute()
-    start_the_day_path = script_dir / "start_the_day.py"
+    start_the_day_path = script_dir / "src" / "start_the_day.py"
 
     if not start_the_day_path.exists():
         print(f"Error: {start_the_day_path} not found")
@@ -72,7 +72,7 @@ def install_launch_agent() -> None:
 
     # Get the absolute path to the plist template
     script_dir = Path(__file__).parent.absolute()
-    plist_template_path = script_dir / "com.leosimons.start-the-day.plist"
+    plist_template_path = script_dir / "etc" / "com.leosimons.start-the-day.plist"
 
     if not plist_template_path.exists():
         print(f"Error: {plist_template_path} not found")
