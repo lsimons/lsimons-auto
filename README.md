@@ -20,9 +20,14 @@ python3 install.py
 
 This creates `~/.local/bin/start-the-day` pointing to `start_the_day.py` (ensure `~/.local/bin` is in your PATH).
 
+**Note**: This project uses `uv` for Python package management and virtual environment handling. While the script can run with standard Python, using `uv` is recommended for dependency management.
+
 ## Usage
 
 ```bash
+# Using uv (recommended)
+uv run test_start_the_day.py
+
 # Run the daily routine
 python3 start_the_day.py
 
@@ -45,12 +50,14 @@ The script stores execution state in `~/.start_the_day.toml` to track the last r
 Unit tests are located in `test_start_the_day.py`. Run them using any of these methods:
 
 ```bash
+# Using uv (recommended)
+uv run test_start_the_day.py
+
 # Direct execution
 python3 test_start_the_day.py
 
 # Via unittest module
 python3 -m unittest test_start_the_day
-
 ```
 
 ## Customization

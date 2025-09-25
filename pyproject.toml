@@ -1,0 +1,20 @@
+[project]
+name = "lsimons-auto"
+version = "0.1.0"
+description = "A lightweight daily startup script for macOS that helps you establish consistent morning routines"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = []
+authors = [
+    { name = "lsimons" }
+]
+
+[project.scripts]
+start-the-day = "start_the_day:main"
+
+[tool.pyright]
+pythonVersion = "3.13"
+typeCheckingMode = "strict"
+
+[tool.uv]
+dev-dependencies = []
