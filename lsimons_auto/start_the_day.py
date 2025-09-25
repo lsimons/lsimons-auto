@@ -9,6 +9,7 @@ import os
 import sys
 import datetime
 import argparse
+import subprocess
 
 
 def get_config_path(test_mode: bool = False) -> str:
@@ -111,12 +112,30 @@ def colorize_text(text: str, color: str, force_color: bool = False) -> str:
     return text
 
 
+def run_command(command: list[str], action_name: str, success_message: str) -> None:
+    """Run a command with error handling and status messages."""
+    print(f"{action_name}...")
+    try:
+        _ = subprocess.run(command, check=True, capture_output=True)
+        print(colorize_text(f"✓ {success_message}", "green"))
+    except subprocess.CalledProcessError as e:
+        print(f"Warning: Failed to {action_name.lower()}: {e}")
+
+
 def start_the_day() -> None:
     """Main function that runs the daily startup routine."""
     print(colorize_text("Good morning!", "yellow"))
     print(colorize_text("Starting your day...", "blue"))
 
-    # Add your daily startup tasks here
+    # Run daily tasks
+    run_command(["auto", "organize_desktop"], "Organizing desktop", "Desktop organized")
+
+    run_command(
+        ["auto", "update_desktop_background"],
+        "Updating desktop background",
+        "Desktop background updated",
+    )
+
     print(colorize_text("✓ Daily startup routine completed", "green"))
 
 
