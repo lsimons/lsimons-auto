@@ -15,6 +15,7 @@ authors = [
 
 [project.scripts]
 start-the-day = "lsimons_auto.start_the_day:main"
+auto = "lsimons_auto.lsimons_auto:main"
 
 [tool.setuptools.packages.find]
 include = ["lsimons_auto*"]

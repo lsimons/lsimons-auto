@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 """
-install.py - Installation script for start_the_day.py
+install.py - Installation script for lsimons-auto
 
 This script:
 1. Creates ~/.local/bin directory if it doesn't exist
 2. Creates a symlink ~/.local/bin/start-the-day pointing to start_the_day.py
-3. Creates ~/.local/log directory for LaunchAgent logs
-4. Installs macOS LaunchAgent plist for daily 7am execution
+3. Creates a symlink ~/.local/bin/auto pointing to lsimons_auto.py
+4. Creates ~/.local/log directory for LaunchAgent logs
+5. Installs macOS LaunchAgent plist for daily 7am execution
 """
 
 import os
@@ -14,14 +15,19 @@ import sys
 from pathlib import Path
 
 
-def install_symlink() -> None:
-    """Install the start-the-day symlink."""
-    # Get the absolute path to start_the_day.py in the lsimons_auto directory
+def install_symlinks() -> None:
+    """Install the start-the-day and lsimons_auto symlinks."""
+    # Get the absolute path to scripts in the lsimons_auto directory
     script_dir = Path(__file__).parent.absolute()
     start_the_day_path = script_dir / "lsimons_auto" / "start_the_day.py"
+    lsimons_auto_path = script_dir / "lsimons_auto" / "lsimons_auto.py"
 
     if not start_the_day_path.exists():
         print(f"Error: {start_the_day_path} not found")
+        sys.exit(1)
+
+    if not lsimons_auto_path.exists():
+        print(f"Error: {lsimons_auto_path} not found")
         sys.exit(1)
 
     # Create ~/.local/bin directory if it doesn't exist
@@ -32,13 +38,19 @@ def install_symlink() -> None:
     else:
         print(f"Directory already exists: {local_bin_dir}")
 
-    # Create symlink ~/.local/bin/start-the-day if it doesn't exist
-    symlink_path = local_bin_dir / "start-the-day"
+    # Install start-the-day symlink
+    install_single_symlink(start_the_day_path, local_bin_dir / "start-the-day")
 
+    # Install auto symlink
+    install_single_symlink(lsimons_auto_path, local_bin_dir / "auto")
+
+
+def install_single_symlink(source_path: Path, symlink_path: Path) -> None:
+    """Install a single symlink, handling existing files gracefully."""
     if symlink_path.exists():
         if symlink_path.is_symlink():
             existing_target = symlink_path.readlink()
-            if existing_target == start_the_day_path:
+            if existing_target == source_path:
                 print(
                     f"Symlink already exists and points to correct target: {symlink_path}"
                 )
@@ -53,8 +65,8 @@ def install_symlink() -> None:
             print(f"Error: {symlink_path} exists but is not a symlink")
             sys.exit(1)
 
-    print(f"Creating symlink: {symlink_path} -> {start_the_day_path}")
-    symlink_path.symlink_to(start_the_day_path)
+    print(f"Creating symlink: {symlink_path} -> {source_path}")
+    symlink_path.symlink_to(source_path)
 
 
 def install_launch_agent() -> None:
@@ -107,17 +119,21 @@ def install_launch_agent() -> None:
 
 def main() -> None:
     """Main installation function."""
-    print("Installing start-the-day...")
+    print("Installing lsimons-auto...")
 
-    install_symlink()
+    install_symlinks()
     install_launch_agent()
 
     print("\nInstallation completed successfully!")
     print(
         "- You can now run 'start-the-day' from anywhere (if ~/.local/bin is in your PATH)"
     )
-    print("- The script will automatically run daily at 7:00 AM via LaunchAgent")
+    print("- You can now run 'auto' from anywhere (if ~/.local/bin is in your PATH)")
+    print(
+        "- The start-the-day script will automatically run daily at 7:00 AM via LaunchAgent"
+    )
     print("- Logs will be written to ~/.local/log/start-the-day.log")
+    print("- Use 'auto --help' to see available actions")
 
 
 if __name__ == "__main__":
