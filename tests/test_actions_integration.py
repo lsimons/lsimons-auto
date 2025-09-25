@@ -251,37 +251,39 @@ class TestInstallation(unittest.TestCase):
             "Dispatcher script should have executable permissions",
         )
 
-    def test_auto_symlink_exists(self):
-        """Test that auto symlink exists in ~/.local/bin."""
-        symlink_path = Path.home() / ".local" / "bin" / "auto"
+    def test_auto_wrapper_script_exists(self):
+        """Test that auto wrapper script exists in ~/.local/bin."""
+        wrapper_path = Path.home() / ".local" / "bin" / "auto"
 
-        # Skip if symlink doesn't exist (installation may not have been run)
-        if not symlink_path.exists():
-            self.skipTest("auto symlink not found - run install.py first")
+        # Skip if wrapper doesn't exist (installation may not have been run)
+        if not wrapper_path.exists():
+            self.skipTest("auto wrapper script not found - run install.py first")
 
-        self.assertTrue(symlink_path.is_symlink(), "auto should be a symlink")
+        self.assertTrue(wrapper_path.is_file(), "auto should be a file")
+        self.assertFalse(wrapper_path.is_symlink(), "auto should not be a symlink")
 
-        # Verify it points to the correct script
-        expected_target = (
-            Path.home() / "dev" / "lsimons-auto" / "lsimons_auto" / "lsimons_auto.py"
+        # Verify it's executable
+        self.assertTrue(
+            wrapper_path.stat().st_mode & 0o111,
+            "auto wrapper script should be executable",
         )
-        actual_target = symlink_path.readlink()
-        self.assertEqual(
-            actual_target,
-            expected_target,
-            f"Symlink should point to {expected_target}, but points to {actual_target}",
-        )
+
+        # Verify it contains expected content
+        content = wrapper_path.read_text()
+        self.assertIn("#!/bin/bash", content, "Wrapper should be a bash script")
+        self.assertIn(".venv/bin/python", content, "Wrapper should use venv Python")
+        self.assertIn("lsimons_auto.py", content, "Wrapper should call lsimons_auto.py")
 
     def test_installed_command_works(self):
         """Test that installed auto command works globally."""
-        symlink_path = Path.home() / ".local" / "bin" / "auto"
+        wrapper_path = Path.home() / ".local" / "bin" / "auto"
 
-        if not symlink_path.exists():
-            self.skipTest("auto symlink not found - run install.py first")
+        if not wrapper_path.exists():
+            self.skipTest("auto wrapper script not found - run install.py first")
 
         # Test the installed command
         result = subprocess.run(
-            [str(symlink_path), "echo", "installation test"],
+            [str(wrapper_path), "echo", "installation test"],
             capture_output=True,
             text=True,
             check=False,

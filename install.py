@@ -15,12 +15,13 @@ import sys
 from pathlib import Path
 
 
-def install_symlinks() -> None:
-    """Install the start-the-day and lsimons_auto symlinks."""
+def install_scripts() -> None:
+    """Install the start-the-day and auto wrapper scripts."""
     # Get the absolute path to scripts in the lsimons_auto directory
     script_dir = Path(__file__).parent.absolute()
     start_the_day_path = script_dir / "lsimons_auto" / "start_the_day.py"
     lsimons_auto_path = script_dir / "lsimons_auto" / "lsimons_auto.py"
+    venv_python = script_dir / ".venv" / "bin" / "python"
 
     if not start_the_day_path.exists():
         print(f"Error: {start_the_day_path} not found")
@@ -28,6 +29,11 @@ def install_symlinks() -> None:
 
     if not lsimons_auto_path.exists():
         print(f"Error: {lsimons_auto_path} not found")
+        sys.exit(1)
+
+    if not venv_python.exists():
+        print(f"Error: Virtual environment Python not found at {venv_python}")
+        print("Run 'uv sync' first to create the virtual environment")
         sys.exit(1)
 
     # Create ~/.local/bin directory if it doesn't exist
@@ -38,35 +44,39 @@ def install_symlinks() -> None:
     else:
         print(f"Directory already exists: {local_bin_dir}")
 
-    # Install start-the-day symlink
-    install_single_symlink(start_the_day_path, local_bin_dir / "start-the-day")
+    # Install start-the-day wrapper script
+    install_wrapper_script(
+        venv_python, start_the_day_path, local_bin_dir / "start-the-day"
+    )
 
-    # Install auto symlink
-    install_single_symlink(lsimons_auto_path, local_bin_dir / "auto")
+    # Install auto wrapper script
+    install_wrapper_script(venv_python, lsimons_auto_path, local_bin_dir / "auto")
 
 
-def install_single_symlink(source_path: Path, symlink_path: Path) -> None:
-    """Install a single symlink, handling existing files gracefully."""
-    if symlink_path.exists():
-        if symlink_path.is_symlink():
-            existing_target = symlink_path.readlink()
-            if existing_target == source_path:
-                print(
-                    f"Symlink already exists and points to correct target: {symlink_path}"
-                )
-                return
-            else:
-                print(
-                    f"Symlink exists but points to different target: {existing_target}"
-                )
-                print("Removing existing symlink and creating new one...")
-                symlink_path.unlink()
+def install_wrapper_script(
+    venv_python: Path, target_script: Path, wrapper_path: Path
+) -> None:
+    """Install a wrapper script that uses the project's virtual environment Python."""
+    # Create wrapper script content
+    wrapper_content = f"""#!/bin/bash
+# Auto-generated wrapper script for lsimons-auto
+# Uses project virtual environment to ensure dependencies are available
+exec "{venv_python}" "{target_script}" "$@"
+"""
+
+    # Handle existing files
+    if wrapper_path.exists():
+        if wrapper_path.read_text().strip() == wrapper_content.strip():
+            print(f"Wrapper script already up-to-date: {wrapper_path}")
+            return
         else:
-            print(f"Error: {symlink_path} exists but is not a symlink")
-            sys.exit(1)
+            print(f"Updating existing wrapper script: {wrapper_path}")
+            wrapper_path.unlink()
 
-    print(f"Creating symlink: {symlink_path} -> {source_path}")
-    symlink_path.symlink_to(source_path)
+    # Create the wrapper script
+    print(f"Creating wrapper script: {wrapper_path}")
+    wrapper_path.write_text(wrapper_content)
+    wrapper_path.chmod(0o755)  # Make executable
 
 
 def install_launch_agent() -> None:
@@ -121,7 +131,7 @@ def main() -> None:
     """Main installation function."""
     print("Installing lsimons-auto...")
 
-    install_symlinks()
+    install_scripts()
     install_launch_agent()
 
     print("\nInstallation completed successfully!")
@@ -129,6 +139,9 @@ def main() -> None:
         "- You can now run 'start-the-day' from anywhere (if ~/.local/bin is in your PATH)"
     )
     print("- You can now run 'auto' from anywhere (if ~/.local/bin is in your PATH)")
+    print(
+        "- Scripts use project virtual environment to ensure dependencies are available"
+    )
     print(
         "- The start-the-day script will automatically run daily at 7:00 AM via LaunchAgent"
     )
