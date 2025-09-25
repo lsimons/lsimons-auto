@@ -1,5 +1,7 @@
 # Design Decisions
 
+This document captures key design decisions for the lsimons-auto project. For detailed feature specifications, see the [specs directory](docs/spec/).
+
 ## Core Philosophy
 - **Dependency-free**: Uses only Python3 standard library (os, sys, datetime, argparse, unittest)
 - **Organized structure**: Main code in `lsimons_auto/`, tests in `tests/`, configuration in `etc/`
@@ -21,3 +23,7 @@
 
 ## Code Quality
 - **Type safety**: Comprehensive type annotations for better IDE support and static analysis, with acceptable remaining diagnostics for argparse/unittest patterns that are inherently dynamic
+
+## Development Process
+- **Spec-driven development**: New features documented in `docs/spec/` before implementation (see [001-spec-based-development.md](docs/spec/001-spec-based-development.md))
+- **Design documentation**: This file updated with design decisions made during feature implementation
