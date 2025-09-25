@@ -47,8 +47,8 @@ def generate_background(width: int = 2880, height: int = 1800) -> Path:
     # Load fonts
     font_path = find_available_font()
     try:
-        title_font = ImageFont.truetype(font_path, 72)
-        time_font = ImageFont.truetype(font_path, 36)
+        title_font = ImageFont.truetype(font_path, 32)
+        time_font = ImageFont.truetype(font_path, 20)
     except OSError:
         # Fallback to default font if TrueType loading fails
         print(f"Warning: Could not load font {font_path}, using default font")
@@ -64,12 +64,20 @@ def generate_background(width: int = 2880, height: int = 1800) -> Path:
     title_bbox = draw.textbbox((0, 0), title_text, font=title_font)
     time_bbox = draw.textbbox((0, 0), timestamp, font=time_font)
 
-    # Center text on image
-    title_x = (width - (title_bbox[2] - title_bbox[0])) // 2
-    title_y = height // 2 - 50
+    # Position text in bottom left corner (with padding from edges)
+    left_padding = 80
+    bottom_padding = 35
+    title_x = left_padding
+    title_y = (
+        height
+        - bottom_padding
+        - (time_bbox[3] - time_bbox[1])
+        - (title_bbox[3] - title_bbox[1])
+        - 20
+    )
 
-    time_x = (width - (time_bbox[2] - time_bbox[0])) // 2
-    time_y = title_y + 100
+    time_x = left_padding
+    time_y = height - bottom_padding - (time_bbox[3] - time_bbox[1])
 
     # Draw text
     draw.text((title_x, title_y), title_text, font=title_font, fill="#E8E8E8")
