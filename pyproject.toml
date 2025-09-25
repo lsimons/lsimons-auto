@@ -16,11 +16,15 @@ authors = [
 [project.scripts]
 start-the-day = "lsimons_auto.start_the_day:main"
 
+[tool.setuptools.packages.find]
+include = ["lsimons_auto*"]
+exclude = ["etc*"]
+
 [tool.pyright]
 pythonVersion = "3.13"
 typeCheckingMode = "strict"
 
-[tool.uv]
-dev-dependencies = [
+[dependency-groups]
+dev = [
     "pytest>=8.0.0",
 ]
