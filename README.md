@@ -12,13 +12,16 @@ A lightweight daily startup script for macOS that helps you establish consistent
 
 ## Installation
 
-Run the installation script to set up a convenient symlink:
+Run the installation script to set up a convenient symlink and daily automation:
 
 ```bash
 python3 install.py
 ```
 
-This creates `~/.local/bin/start-the-day` pointing to `start_the_day.py` (ensure `~/.local/bin` is in your PATH).
+This:
+- Creates `~/.local/bin/start-the-day` pointing to `start_the_day.py` (ensure `~/.local/bin` is in your PATH)
+- Installs a macOS LaunchAgent to run the script automatically at 7:00 AM daily
+- Creates `~/.local/log/` directory for execution logs
 
 **Note**: This project uses `uv` for Python package management and virtual environment handling. While the script can run with standard Python, using `uv` is recommended for dependency management.
 
@@ -38,6 +41,23 @@ python3 start_the_day.py --force
 ## Configuration
 
 The script stores execution state in `~/.start_the_day.toml` to track the last run date.
+
+## Automation
+
+After installation, the script runs automatically via macOS LaunchAgent:
+- **Schedule**: Daily at 7:00 AM
+- **Logs**: Written to `~/.local/log/start-the-day.log` and `~/.local/log/start-the-day-error.log`
+- **Management**: Use `launchctl` to control the service:
+  ```bash
+  # Check status
+  launchctl list | grep com.leosimons.start-the-day
+  
+  # Unload (disable)
+  launchctl unload ~/Library/LaunchAgents/com.leosimons.start-the-day.plist
+  
+  # Load (re-enable)
+  launchctl load ~/Library/LaunchAgents/com.leosimons.start-the-day.plist
+  ```
 
 ## Development
 
