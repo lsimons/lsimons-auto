@@ -2,7 +2,7 @@
 
 ## Core Philosophy
 - **Dependency-free**: Uses only Python3 standard library (os, sys, datetime, argparse, unittest)
-- **Organized structure**: Main code in `src/`, tests in `test/`, configuration in `etc/`
+- **Organized structure**: Main code in `lsimons_auto/`, tests in `tests/`, configuration in `etc/`
 - **Functional approach**: Avoids OOP, uses simple functions for clarity and maintainability
 
 ## State Management
@@ -16,7 +16,7 @@
 - **Logging**: Simple print statements for user feedback, no external logging dependencies
 
 ## Testing Strategy
-- **Test separation**: Unit tests in dedicated `test/` directory using Python's unittest framework
+- **Test separation**: Unit tests in dedicated `tests/` directory using Python's unittest framework
 - **Testing approach**: Integration-style tests using separate config file (~/.start_the_day_test.toml) rather than complex mocking - more reliable, easier to debug, and tests real file I/O behavior
 
 ## Code Quality

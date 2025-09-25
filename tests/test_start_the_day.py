@@ -12,19 +12,13 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-# Import the module under test
-import sys
-from pathlib import Path
-
-sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
-
-from start_the_day import (
+from lsimons_auto.start_the_day import (
     get_config_path,
     parse_toml_simple,
-    write_toml_simple,
-    load_execution_state,
-    save_execution_state,
     get_today_date,
+    load_execution_state,
+    write_toml_simple,
+    save_execution_state,
     already_ran_today,
     update_execution_state,
     colorize_text,

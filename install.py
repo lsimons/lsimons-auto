@@ -16,9 +16,9 @@ from pathlib import Path
 
 def install_symlink() -> None:
     """Install the start-the-day symlink."""
-    # Get the absolute path to start_the_day.py in the src directory
+    # Get the absolute path to start_the_day.py in the lsimons_auto directory
     script_dir = Path(__file__).parent.absolute()
-    start_the_day_path = script_dir / "src" / "start_the_day.py"
+    start_the_day_path = script_dir / "lsimons_auto" / "start_the_day.py"
 
     if not start_the_day_path.exists():
         print(f"Error: {start_the_day_path} not found")

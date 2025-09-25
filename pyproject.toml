@@ -1,3 +1,7 @@
+[build-system]
+requires = ["setuptools>=45", "wheel"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "lsimons-auto"
 version = "0.1.0"
@@ -10,7 +14,10 @@ authors = [
 ]
 
 [project.scripts]
-start-the-day = "src.start_the_day:main"
+start-the-day = "lsimons_auto.start_the_day:main"
+
+[tool.setuptools.packages.find]
+include = ["lsimons_auto*"]
 
 [tool.pyright]
 pythonVersion = "3.13"
