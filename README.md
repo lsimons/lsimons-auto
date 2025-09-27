@@ -53,6 +53,7 @@ start-the-day --help
 ### Auto CLI Actions
 - **`organize-desktop`** - Organize Desktop files by creation date into dated directories
 - **`update-desktop-background`** - Generate custom desktop background with current UTC time
+- **`launch-apps`** - Launch a set of productivity and communication apps for your daily workflow
 - **`echo`** - Simple echo utility for testing the command dispatcher
 
 ### Action Details

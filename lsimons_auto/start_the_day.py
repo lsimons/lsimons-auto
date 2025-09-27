@@ -136,6 +136,12 @@ def start_the_day() -> None:
         "Desktop background updated",
     )
 
+    run_command(
+        ["auto", "launch_apps"],
+        "Launching apps",
+        "Apps launched",
+    )
+
     print(colorize_text("✓ Daily startup routine completed", "green"))
 
 

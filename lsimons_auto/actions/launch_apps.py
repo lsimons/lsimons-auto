@@ -15,6 +15,16 @@ from typing import Optional
 # Hardcoded list of commands to launch
 LAUNCH_COMMANDS = [
     "open -g -a /System/Applications/TextEdit.app ~/scratch.txt",
+    "open -g /Applications/Ghostty.app",
+    "open -g -a '/Applications/Brave Browser.app' 'https://schubergphilis.okta-emea.com/'",
+    "open -g /Applications/Slack.app",
+    "open -g '/Applications/Zed.app'",
+    "open -g '/Applications/Microsoft Outlook.app'",
+    "open -g '/Applications/Microsoft Teams.app'",
+    "open -g '/Applications/Microsoft Word.app'",
+    "open -g '/Applications/Microsoft Excel.app'",
+    "open -g '/Applications/Microsoft PowerPoint.app'",
+    "open -g '/Users/lsimons/Applications/IntelliJ IDEA Ultimate.app'",
     # Add more commands here as needed
 ]
 
