@@ -1,139 +1,88 @@
 # GitHub Copilot Repository Onboarding Instructions
 
-These instructions help a GitHub-based coding agent (Copilot-type code assistant) work effectively in this repository. They supplement (not replace) the canonical agent guidance in `AGENTS.md` — ALWAYS read and follow `AGENTS.md` first. That file defines the authoritative workflow, response style, and development philosophy. This file only adds GitHub / PR / repo-collaboration specific practices and guardrails.
+This file provides ONLY GitHub collaboration and workflow layering. All core development rules (spec-first process, testing requirements, diagnostic handling, style, action architecture) are defined in `AGENTS.md`. Do not restate them here; treat that file as authoritative.
 
-## Core Principles (Reinforced for GitHub Context)
-- Single source of truth for general process: `AGENTS.md`
-- Spec-first: Do NOT implement a non-trivial feature without a spec in `docs/spec/`
-- Keep the code minimal, functional, dependency-light
-- Never introduce new third‑party packages unless a spec explicitly justifies it
-- Prefer small, focused changes per PR (one spec or one fix)
+## Scope
+Use this document for:
+- Deciding how to structure a PR
+- Commit message patterns
+- When to add or reference a spec
+- Minimal checklists before pushing
+Everything else → read `AGENTS.md`.
 
-## When Starting a Task
-1. Identify whether it's:
-   - A new feature → Check for existing numbered spec in `docs/spec/`
-   - A bug / refinement → Open/update a spec only if design impact exists
-2. If spec is missing for a feature-level change: propose adding `docs/spec/NNN-something.md`
-3. Confirm location of target files instead of guessing (e.g. actions live in `lsimons_auto/actions/`)
+## When Beginning Work
+1. Confirm the task type:
+   - Feature → there MUST be a numbered spec in `docs/spec/`
+   - Minor fix / doc tweak → no spec unless design impact
+2. If a spec is needed and missing: create `docs/spec/NNN-short-name.md` (keep it concise; follow shared patterns).
+3. Locate target files (do not guess paths). Actions live in `lsimons_auto/actions/`.
 
-## File & Architecture Orientation
-- Dispatcher: `lsimons_auto/lsimons_auto.py`
-- Daily routine: `lsimons_auto/start_the_day.py` (standalone command: `start-the-day`)
-- Actions directory: `lsimons_auto/actions/*.py` (auto-discovered; must expose `main(args: Optional[list[str]] = None)`)
-- Specs: `docs/spec/*.md` (sequential numbering, keep concise)
-- Design rationale: `DESIGN.md`
-- Cross-agent rules: `AGENTS.md`
-- Claude-specific notes (do not duplicate here): `CLAUDE.md`
-- LaunchAgent templates: `etc/`
-- Tests: `tests/`
-
-## Adding a New Action (GitHub Workflow Focus)
-1. Create/verify spec: `docs/spec/NNN-new-action-name.md`
-2. Implement: `lsimons_auto/actions/new_action_name.py` using the template in `docs/spec/000-shared-patterns.md`
-3. Add tests: `tests/test_new_action_name.py`
-4. Update `README.md` "Available Actions" section
-5. Commit messages reference the spec number: e.g. `NNN: implement new action dispatcher integration`
-6. Do NOT modify the dispatcher for discovery; it must remain dynamic.
+## Minimal Action Addition Checklist (Workflow Layer)
+- Spec exists (referenced by number)
+- New action file in `lsimons_auto/actions/` exposing `main(...)`
+- Test file in `tests/`
+- README updated with a one-line action summary
+- Commit message starts with spec number (e.g. `008: add foo action`)
+- No dispatcher modification (discovery must remain dynamic)
 
 ## Commit Message Conventions
-- Feature implementation: `00X: short description`
-- Bug fix referencing file: `fix: organize_desktop date folder creation edge case`
-- Spec addition: `00X: add spec for <feature>`
-- Avoid verbose narratives—keep messages actionable
-- Group logically related changes; avoid multi-topic commits
+- Feature: `00X: short imperative summary`
+- Spec authoring: `00X: add spec for <purpose>`
+- Bug fix: `fix: <area> <concise issue>`
+- Avoid multi-topic commits; split if unrelated.
 
-## Pull Request (PR) Guidelines
-Provide a concise PR description including:
-- What changed
-- Why (reference spec number or rationale)
-- Testing performed (`uv run pytest`, mention any added tests)
-- Any potential follow-ups
+## Pull Request Guidelines
+PR description should state:
+- What changed (one paragraph max)
+- Why (reference spec number or explain fix)
+- Tests added/updated (`uv run pytest` must pass)
+- Any intentional omissions or follow-ups
 
-DO NOT open PRs that mix:
-- Spec authoring + multiple implementations
-- Refactors + new feature logic
-- Formatting-only noise + functional changes
+Avoid PRs that combine unrelated concerns (e.g. refactor + feature + formatting).
 
-## Testing Expectations
-- Always run: `uv run pytest`
-- Add tests for new behaviors; prefer integration-style
-- Use temp dirs (follow patterns in existing tests)
-- Avoid network or side-effect heavy test additions
+## Documentation Touch Points (When to Touch)
+- `README.md`: only for user-visible capability changes
+- `DESIGN.md`: only for cross-cutting architectural decisions
+- `docs/spec/`: new or revised feature definitions
+If you find yourself duplicating philosophy → stop and link `AGENTS.md`.
 
-## Type & Diagnostic Handling
-- Maintain type annotations
-- Only use targeted Pyright ignores:
-  - `# pyright: ignore[reportAny]`
-  - `# pyright: ignore[reportImplicitOverride]`
-- Do NOT blanket-ignore entire files
-- If adding dynamic argparse logic, keep it readable and minimally reflective
+## Safe Change Checklist (Pre-Commit)
+- Matches an existing spec (or clearly a trivial fix)
+- Tests added/updated
+- No accidental dispatcher coupling
+- No new dependencies
+- No unapproved architectural shifts
+- Docs updated only where necessary
 
-## Style & Code Quality
-- Favor plain functions over classes unless a spec justifies otherwise
-- Keep argument parsing straightforward
-- Avoid introducing global state or hidden side effects
-- Log/print user-facing messages plainly (no color dependencies except simple ANSI already in use)
-- Maintain graceful error handling: fail a single action without crashing the rest of a routine where applicable
+## Handling a Bug
+1. Reproduce
+2. Add or adjust a failing test
+3. Apply smallest fix
+4. Commit with clear scope
+5. Do not opportunistically refactor unrelated code in same PR.
 
-## Installation & Runtime Assumptions
-- Scripts installed to `~/.local/bin/`
-- `uv` is the package manager assumed
-- macOS specific paths (e.g. LaunchAgent usage) must remain intact unless a spec broadens scope
+## Security / Safety (Workflow Reminders)
+- Do not broaden shell execution surfaces
+- Keep subprocess usage explicit
+- Avoid hidden global state additions
 
-## Safe Modification Checklist (Before Committing)
-- Did I read `AGENTS.md` again for alignment?
-- Does change match an existing spec? If not, should one be created?
-- Are tests added or adjusted? (`tests/`)
-- Did I avoid speculative abstractions?
-- Are doc updates needed (README, DESIGN, or new spec)?
-- Could this silently break action discovery or daily routine scheduling?
+## What Is Intentionally NOT Repeated Here
+- Spec format and philosophy
+- Diagnostic suppression rules
+- Style and type guidance
+- Detailed testing philosophy
+All of that is in `AGENTS.md`.
 
-## What NOT to Do Without a Spec
-- Introduce dependency management changes
-- Convert functional scripts into classes
-- Add caching layers
-- Replace TOML parsing with external libs
-- Change the dynamic discovery model
-- Add asynchronous concurrency
-
-## Handling Bugs
-- Reproduce first
-- Add/extend a test that fails pre-fix
-- Apply the smallest corrective change
-- Reference impacted file(s) in commit title/body
-
-## Documentation Touch Points
-Update the following only when necessary:
-- `README.md` — user-facing capabilities (new action, new routine behavior)
-- `DESIGN.md` — architectural or cross-cutting decision changes
-- `docs/spec/` — new or revised feature design
-- Do NOT duplicate high-level philosophy already in `AGENTS.md`
-
-## LaunchAgent / Scheduling Notes
-- Do not change timing defaults (7:00 AM) unless a spec states a new scheduling policy
-- If modifying output/logging, ensure existing log path assumptions remain valid
-
-## Performance & Scalability
-- Current scale is personal automation; avoid premature optimization
-- Only optimize if a spec or test reveals measurable slowness
-
-## Security / Safety Considerations
-- Avoid executing arbitrary shell input
-- Validate external file operations (e.g., Desktop file handling)
-- Keep subprocess usage constrained and explicit
+## Quick Reference
+- Run tests: `uv run pytest`
+- Single test file: `uv run pytest tests/test_start_the_day.py`
+- Install/update wrappers: `python3 install.py`
 
 ## If Unsure
 1. Re-read `AGENTS.md`
-2. Inspect analogous existing action or spec
-3. Propose a minimal spec stub rather than guessing
-4. Keep the PR small and reviewable
+2. Look at an existing similar spec or action
+3. Propose a tiny spec stub if direction unclear
+4. Keep the PR small
 
-## Quick Reference Commands
-- Full test run: `uv run pytest`
-- Single test file: `uv run pytest tests/test_start_the_day.py`
-- Install (create/update wrappers): `python3 install.py`
-
-## Final Reminder
-AGENTS.md is the governing document. This file is a GitHub operational layer: PR discipline, commit hygiene, change scoping, and safeguards to preserve the established minimalist, spec-driven architecture.
-
-Stay small. Stay explicit. Ship only what is specified.
+## Final Note
+This file is a thin GitHub-facing layer. If you need to add more here, first ask: “Is this already guaranteed by AGENTS.md?” If yes—link it instead of repeating it.
