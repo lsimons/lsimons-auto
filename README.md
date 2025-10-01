@@ -125,7 +125,8 @@ Organized files are placed in dated directories on the Desktop (`~/Desktop/YYYY/
 This project follows a spec-based development approach documented in [`docs/spec/`](docs/spec/).
 
 ### Development Guidelines
-- See [AGENT.md](AGENT.md) for development guidelines and agent instructions
+- See [CLAUDE.md](CLAUDE.md) for Claude Code-specific guidance
+- See [AGENTS.md](AGENTS.md) for development guidelines and agent instructions
 - See [DESIGN.md](DESIGN.md) for architectural decisions and design rationale
 - Reference spec numbers in commit messages during feature implementation
 - Run tests after changes: `uv run pytest`

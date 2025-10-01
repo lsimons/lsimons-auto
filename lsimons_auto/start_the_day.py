@@ -2,7 +2,7 @@
 """
 start_the_day.py - A lightweight daily startup script for macOS
 
-See AGENT.md for agent instructions and DESIGN.md for design decisions.
+See AGENTS.md for agent instructions and DESIGN.md for design decisions.
 """
 
 import os

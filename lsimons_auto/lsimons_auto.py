@@ -5,7 +5,7 @@ lsimons_auto.py - Command dispatcher for lsimons-auto actions
 This script acts as a unified CLI interface that routes subcommands to
 corresponding action scripts in the actions/ directory.
 
-See AGENT.md for agent instructions and DESIGN.md for design decisions.
+See AGENTS.md for agent instructions and DESIGN.md for design decisions.
 """
 
 import argparse

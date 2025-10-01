@@ -13,7 +13,7 @@
 - Files named `XXX-{feature-name}.md` in `docs/spec/`
 - Standard template focusing on purpose, requirements, design approach
 - Status tracking: Draft → Approved → Implemented
-- Update `DESIGN.md` and `AGENT.md` when specs introduce new patterns
+- Update `DESIGN.md` and `AGENTS.md` when specs introduce new patterns
 
 **Implementation Notes:**
 - See `000-shared-patterns.md` for code templates, `DESIGN.md` for architectural patterns
