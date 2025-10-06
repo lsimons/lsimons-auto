@@ -116,10 +116,18 @@ def run_command(command: list[str], action_name: str, success_message: str) -> N
     """Run a command with error handling and status messages."""
     print(f"{action_name}...")
     try:
-        _ = subprocess.run(command, check=True, capture_output=True)
+        result = subprocess.run(command, check=True, capture_output=True, text=True)
+        if result.stdout:
+            print(result.stdout)
+        if result.stderr:
+            print(result.stderr, file=sys.stderr)
         print(colorize_text(f"✓ {success_message}", "green"))
     except subprocess.CalledProcessError as e:
         print(f"Warning: Failed to {action_name.lower()}: {e}")
+        if e.stdout:
+            print(f"stdout: {e.stdout}")
+        if e.stderr:
+            print(f"stderr: {e.stderr}", file=sys.stderr)
 
 
 def start_the_day() -> None:
