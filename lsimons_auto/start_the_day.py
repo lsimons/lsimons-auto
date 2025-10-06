@@ -114,13 +114,13 @@ def colorize_text(text: str, color: str, force_color: bool = False) -> str:
 
 def run_command(command: list[str], action_name: str, success_message: str) -> None:
     """Run a command with error handling and status messages."""
-    print(f"{action_name}...")
+    print(colorize_text(f"{action_name}: `{' '.join(command)}`...", "blue"))
     try:
-        result = subprocess.run(command, check=True, capture_output=True, text=True)
+        result = subprocess.run(command, check=True, text=True, capture_output=True)
         if result.stdout:
-            print(result.stdout)
+            print(result.stdout.strip())
         if result.stderr:
-            print(result.stderr, file=sys.stderr)
+            print(result.stderr.strip(), file=sys.stderr)
         print(colorize_text(f"✓ {success_message}", "green"))
     except subprocess.CalledProcessError as e:
         print(f"Warning: Failed to {action_name.lower()}: {e}")
@@ -155,6 +155,10 @@ def start_the_day() -> None:
 
 def main() -> None:
     """Main entry point with argument parsing."""
+    print(
+        f"Current date and time (UTC): {datetime.datetime.now(datetime.timezone.utc).isoformat()}"
+    )
+
     parser = argparse.ArgumentParser(description="Daily startup script for macOS")
 
     _ = parser.add_argument(

@@ -108,9 +108,14 @@ def set_desktop_background(image_path: Path) -> None:
     '''
 
     try:
-        subprocess.run(
-            ["osascript", "-e", script], check=True, capture_output=True, text=True
+        print(f"Running command: osascript -e {repr(script)}")
+        result = subprocess.run(
+            ["osascript", "-e", script], check=True, text=True, capture_output=True
         )
+        if result.stdout:
+            print(f"Command output: {result.stdout.strip()}")
+        if result.stderr:
+            print(f"Command stderr: {result.stderr.strip()}")
         print(f"Desktop background updated: {image_path}")
     except subprocess.CalledProcessError as e:
         print(f"Failed to set desktop background: {e}")
