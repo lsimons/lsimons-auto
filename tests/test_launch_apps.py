@@ -57,7 +57,7 @@ class TestLaunchApps(unittest.TestCase):
         self.assertEqual(result.returncode, 0)
         self.assertIn("Configured launch commands:", result.stdout)
         self.assertIn(
-            "open /System/Applications/TextEdit.app ~/scratch.txt", result.stdout
+            "open -g -a /System/Applications/TextEdit.app ~/scratch.txt", result.stdout
         )
 
     @patch("lsimons_auto.actions.launch_apps.subprocess.Popen")
@@ -104,7 +104,9 @@ class TestLaunchApps(unittest.TestCase):
     @patch("lsimons_auto.actions.launch_apps.launch_command")
     def test_launch_all_apps_partial_failure(self, mock_launch_command):
         """Test launching apps with some failures."""
-        mock_launch_command.side_effect = [True, False]  # First succeeds, second fails
+        # Create a side_effect list that matches the number of commands
+        side_effects = [True, False] + [True] * (len(launch_apps.LAUNCH_COMMANDS) - 2)
+        mock_launch_command.side_effect = side_effects
 
         # Redirect stdout to capture output
         with patch("sys.stdout") as mock_stdout:
@@ -134,7 +136,7 @@ class TestLaunchApps(unittest.TestCase):
         """Test that at least one command is configured."""
         self.assertGreater(len(launch_apps.LAUNCH_COMMANDS), 0)
         self.assertIn(
-            "open /System/Applications/TextEdit.app ~/scratch.txt",
+            "open -g -a /System/Applications/TextEdit.app ~/scratch.txt",
             launch_apps.LAUNCH_COMMANDS[0],
         )
 
