@@ -212,6 +212,86 @@ class TestActionsIntegration(unittest.TestCase):
         # Should only show Python files, not __init__.py
         self.assertNotIn("__init__", result.stdout)
 
+    def test_dispatcher_action_returns_nonzero_exit_code(self):
+        """Test dispatcher preserves action exit codes."""
+        # echo with invalid flag should return non-zero
+        result = self.run_command(
+            [sys.executable, str(self.dispatcher_script), "echo", "--invalid-arg"],
+            expect_success=False,
+        )
+
+        self.assertNotEqual(result.returncode, 0)
+        # Dispatcher should forward the exit code from the action
+        self.assertGreater(result.returncode, 0)
+
+    def test_dispatcher_with_empty_action_name(self):
+        """Test dispatcher handles edge case of empty action name."""
+        # Passing just a space or empty string as action
+        result = self.run_command(
+            [sys.executable, str(self.dispatcher_script), ""],
+            expect_success=False,
+        )
+
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("Unknown action", result.stdout)
+
+    def test_dispatcher_discovers_multiple_actions(self):
+        """Test that dispatcher discovers all available actions."""
+        result = self.run_command([sys.executable, str(self.dispatcher_script)])
+
+        # Should discover multiple action files
+        self.assertIn("echo", result.stdout)
+        self.assertIn("organize_desktop", result.stdout)
+        self.assertIn("update_desktop_background", result.stdout)
+        self.assertIn("launch_apps", result.stdout)
+
+    def test_dispatcher_handles_action_with_no_args(self):
+        """Test dispatcher correctly handles action that expects arguments."""
+        # organize-desktop should work without args (uses defaults)
+        result = self.run_command(
+            [
+                sys.executable,
+                str(self.dispatcher_script),
+                "organize_desktop",
+                "--dry-run",
+            ]
+        )
+
+        self.assertEqual(result.returncode, 0)
+
+    def test_dispatcher_unknown_action_shows_available_list(self):
+        """Test that error for unknown action shows available actions."""
+        result = self.run_command(
+            [sys.executable, str(self.dispatcher_script), "nonexistent_action"],
+            expect_success=False,
+        )
+
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("Unknown action 'nonexistent_action'", result.stdout)
+        self.assertIn("Available actions:", result.stdout)
+        # Should list actual available actions
+        self.assertIn("echo", result.stdout)
+
+    def test_dispatcher_case_sensitive_action_names(self):
+        """Test that action names are case-sensitive."""
+        result = self.run_command(
+            [sys.executable, str(self.dispatcher_script), "ECHO", "test"],
+            expect_success=False,
+        )
+
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("Unknown action", result.stdout)
+
+    def test_dispatcher_action_with_dash_in_name(self):
+        """Test actions with dashes (underscores in filename) work correctly."""
+        # organize_desktop becomes organize-desktop (or use underscore)
+        result = self.run_command(
+            [sys.executable, str(self.dispatcher_script), "organize_desktop", "--help"]
+        )
+
+        self.assertEqual(result.returncode, 0)
+        self.assertIn("organize", result.stdout.lower())
+
 
 class TestInstallation(unittest.TestCase):
     """Test installation functionality."""
