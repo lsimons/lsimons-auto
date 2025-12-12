@@ -125,8 +125,65 @@ on run
         end try
         return false
       end tryWebAreas
+      -- Recursively search for a button named "New chat" in a UI element
+      on findAndClickNewChatButton(elem)
+        try
+          set btns to every button of elem
+          repeat with b in btns
+            set btnName to ""
+            try
+              set btnName to name of b
+            end try
+            if btnName is "New chat" then
+              perform action "AXPress" of b
+              return true
+            end if
+          end repeat
+        end try
+        -- Recursively search groups, UI elements, scroll areas, etc.
+        set childRoles to {"group", "UI element", "scroll area", "web area"}
+        repeat with cr in childRoles
+          try
+            set children to (every UI element of elem whose role description contains cr)
+            repeat with c in children
+              if my findAndClickNewChatButton(c) then return true
+            end repeat
+          end try
+        end repeat
+        return false
+      end findAndClickNewChatButton
     end script
     -- ------- End helpers -------
+
+
+
+    -- Try to find and click "New chat" button
+    set newChatClicked to false
+    try
+      set uiElems to every UI element of theWin
+      repeat with e in uiElems
+        set r to ""
+        set roleDesc to ""
+        try
+          set r to role of e
+        end try
+        try
+          set roleDesc to role description of e
+        end try
+        if (r is "AXWebArea") or (roleDesc contains "web area") then
+          if AXHelpers's findAndClickNewChatButton(e) then
+            set newChatClicked to true
+            exit repeat
+          end if
+        end if
+      end repeat
+    end try
+    if newChatClicked then
+      display dialog "Clicked 'New chat' button. Waiting for UI..." buttons {"OK"} giving up after 1
+      delay 1.0
+    else
+      display dialog "Could not find 'New chat' button. Please start a new chat manually." buttons {"OK"} default button 1
+    end if
 
     -- Candidate names we've seen across builds
     set candidateNames to {"Message Copilot", "Type a message", "Type your message", "Ask Copilot", "Prompt", "Message", "Ask me anything", "Chat input"}
