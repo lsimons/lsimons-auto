@@ -51,6 +51,7 @@ start-the-day --help
 - **`start-the-day`** - Daily startup routine with automated scheduling (separate from auto CLI)
 
 ### Auto CLI Actions
+- **`copilot`** - Activate Microsoft 365 Copilot and paste clipboard content into the chat buffer
 - **`organize-desktop`** - Organize Desktop files by creation date into dated directories
 - **`update-desktop-background`** - Generate custom desktop background with current UTC time
 - **`launch-apps`** - Launch a set of productivity and communication apps for your daily workflow

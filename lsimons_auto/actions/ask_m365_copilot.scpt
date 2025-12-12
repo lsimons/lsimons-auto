@@ -129,7 +129,7 @@ on run
     -- ------- End helpers -------
 
     -- Candidate names we've seen across builds
-    set candidateNames to {"Type a message", "Type your message", "Ask Copilot", "Prompt", "Message", "Ask me anything", "Chat input"}
+    set candidateNames to {"Message Copilot", "Type a message", "Type your message", "Ask Copilot", "Prompt", "Message", "Ask me anything", "Chat input"}
 
     set focusedOK to AXHelpers's tryFocusByName(theWin, candidateNames)
     if focusedOK is false then
