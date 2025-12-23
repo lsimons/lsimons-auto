@@ -138,6 +138,12 @@ def start_the_day() -> None:
     # Run daily tasks
     run_command(["auto", "organize_desktop"], "Organizing desktop", "Desktop organized")
 
+    run_command(
+        ["auto", "git_sync"],
+        "Syncing git repositories",
+        "Git repositories synced",
+    )
+
     # run_command(
     #     ["auto", "update_desktop_background"],
     #     "Updating desktop background",
