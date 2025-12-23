@@ -41,14 +41,14 @@ def run_command(cmd: list[str], cwd: Optional[Path] = None) -> bool:
         return False
 
 
-def get_repos(archive: bool = False) -> list[str]:
+def get_repos(owner: str, archive: bool = False) -> list[str]:
     """Fetch list of repositories using gh CLI."""
-    # gh repo list lsimons -L 1000 --json name,isFork,isArchived
+    # gh repo list owner -L 1000 --json name,isFork,isArchived
     cmd = [
         "gh",
         "repo",
         "list",
-        "lsimons",
+        owner,
         "-L",
         "1000",
         "--json",
@@ -85,22 +85,22 @@ def get_repos(archive: bool = False) -> list[str]:
     return filtered_repos
 
 
-def sync_repo(repo_name: str, target_dir: Path) -> None:
+def sync_repo(owner: str, repo_name: str, target_dir: Path) -> None:
     """Sync a single repository."""
     repo_path = target_dir / repo_name
     
     if repo_path.exists():
         # git fetch --all
-        print(f"Updating {repo_name}...")
+        print(f"Updating {owner}/{repo_name}...")
         success = run_command(["git", "fetch", "--all"], cwd=repo_path)
     else:
         # git clone
-        print(f"Cloning {repo_name}...")
-        repo_url = f"https://github.com/lsimons/{repo_name}.git"
+        print(f"Cloning {owner}/{repo_name}...")
+        repo_url = f"https://github.com/{owner}/{repo_name}.git"
         success = run_command(["git", "clone", repo_url], cwd=target_dir)
 
     if not success:
-        print(f"Failed to sync {repo_name}")
+        print(f"Failed to sync {owner}/{repo_name}")
 
 
 def main(args: Optional[list[str]] = None) -> None:
@@ -117,43 +117,41 @@ def main(args: Optional[list[str]] = None) -> None:
     parsed_args = parser.parse_args(args)
 
     base_dir = Path.home() / "git"
-    lsimons_dir = base_dir / "lsimons"
-    archive_dir = lsimons_dir / "archive"
+    owners = ["lsimons", "typelinkmodel"]
 
-    # Create directories
-    if not parsed_args.dry_run:
-        lsimons_dir.mkdir(parents=True, exist_ok=True)
-        archive_dir.mkdir(parents=True, exist_ok=True)
-    else:
-        print(f"Would create directories: {lsimons_dir}, {archive_dir}")
+    for owner in owners:
+        owner_dir = base_dir / owner
+        archive_dir = owner_dir / "archive"
 
-    # Sync active repos
-    print("Fetching active repository list...")
-    if parsed_args.dry_run:
-        active_repos = ["example-active-repo"] # Mock for dry run if gh not called? 
-        # Actually, let's call gh even in dry run unless we want to avoid API calls.
-        # But for safety, let's just call it.
-    
-    active_repos = get_repos(archive=False)
-    print(f"Found {len(active_repos)} active repositories.")
-
-    for repo in active_repos:
-        if parsed_args.dry_run:
-            print(f"Would sync active repo: {repo} to {lsimons_dir}")
+        # Create directories
+        if not parsed_args.dry_run:
+            owner_dir.mkdir(parents=True, exist_ok=True)
+            archive_dir.mkdir(parents=True, exist_ok=True)
         else:
-            sync_repo(repo, lsimons_dir)
+            print(f"Would create directories: {owner_dir}, {archive_dir}")
 
-    # Sync archived repos
-    if parsed_args.include_archive:
-        print("Fetching archived repository list...")
-        archived_repos = get_repos(archive=True)
-        print(f"Found {len(archived_repos)} archived repositories.")
+        # Sync active repos
+        print(f"Fetching active repository list for {owner}...")
+        active_repos = get_repos(owner=owner, archive=False)
+        print(f"Found {len(active_repos)} active repositories for {owner}.")
 
-        for repo in archived_repos:
+        for repo in active_repos:
             if parsed_args.dry_run:
-                print(f"Would sync archived repo: {repo} to {archive_dir}")
+                print(f"Would sync active repo: {owner}/{repo} to {owner_dir}")
             else:
-                sync_repo(repo, archive_dir)
+                sync_repo(owner, repo, owner_dir)
+
+        # Sync archived repos
+        if parsed_args.include_archive:
+            print(f"Fetching archived repository list for {owner}...")
+            archived_repos = get_repos(owner=owner, archive=True)
+            print(f"Found {len(archived_repos)} archived repositories for {owner}.")
+
+            for repo in archived_repos:
+                if parsed_args.dry_run:
+                    print(f"Would sync archived repo: {owner}/{repo} to {archive_dir}")
+                else:
+                    sync_repo(owner, repo, archive_dir)
 
 
 if __name__ == "__main__":
