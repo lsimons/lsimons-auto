@@ -13,7 +13,13 @@ import shutil
 import subprocess
 import sys
 from pathlib import Path
-from typing import Optional
+from typing import Optional, NamedTuple
+
+
+class OwnerConfig(NamedTuple):
+    name: str
+    local_dir: Optional[str] = None
+    allow_archived: bool = True
 
 
 def run_command(cmd: list[str], cwd: Optional[Path] = None) -> bool:
@@ -43,14 +49,14 @@ def run_command(cmd: list[str], cwd: Optional[Path] = None) -> bool:
 
 def get_repos(owner: str, archive: bool = False) -> list[str]:
     """Fetch list of repositories using gh CLI."""
-    # gh repo list owner -L 1000 --json name,isFork,isArchived
+    # gh repo list owner -L 200 --json name,isFork,isArchived
     cmd = [
         "gh",
         "repo",
         "list",
         owner,
         "-L",
-        "1000",
+        "200",
         "--json",
         "name,isFork,isArchived",
     ]
@@ -117,18 +123,31 @@ def main(args: Optional[list[str]] = None) -> None:
     parsed_args = parser.parse_args(args)
 
     base_dir = Path.home() / "git"
-    owners = ["lsimons", "typelinkmodel"]
+    
+    owners = [
+        OwnerConfig(name="lsimons"),
+        OwnerConfig(name="typelinkmodel"),
+        OwnerConfig(name="LAB271", local_dir="labs", allow_archived=False),
+    ]
 
-    for owner in owners:
-        owner_dir = base_dir / owner
+    for config in owners:
+        owner = config.name
+        # Use custom local directory if specified, otherwise use owner name
+        local_dirname = config.local_dir if config.local_dir else owner
+        owner_dir = base_dir / local_dirname
         archive_dir = owner_dir / "archive"
 
         # Create directories
         if not parsed_args.dry_run:
             owner_dir.mkdir(parents=True, exist_ok=True)
-            archive_dir.mkdir(parents=True, exist_ok=True)
+            # Only create archive dir if we might use it
+            if parsed_args.include_archive and config.allow_archived:
+                archive_dir.mkdir(parents=True, exist_ok=True)
         else:
-            print(f"Would create directories: {owner_dir}, {archive_dir}")
+            dirs_to_create = [str(owner_dir)]
+            if parsed_args.include_archive and config.allow_archived:
+                dirs_to_create.append(str(archive_dir))
+            print(f"Would create directories: {', '.join(dirs_to_create)}")
 
         # Sync active repos
         print(f"Fetching active repository list for {owner}...")
@@ -143,15 +162,18 @@ def main(args: Optional[list[str]] = None) -> None:
 
         # Sync archived repos
         if parsed_args.include_archive:
-            print(f"Fetching archived repository list for {owner}...")
-            archived_repos = get_repos(owner=owner, archive=True)
-            print(f"Found {len(archived_repos)} archived repositories for {owner}.")
+            if config.allow_archived:
+                print(f"Fetching archived repository list for {owner}...")
+                archived_repos = get_repos(owner=owner, archive=True)
+                print(f"Found {len(archived_repos)} archived repositories for {owner}.")
 
-            for repo in archived_repos:
-                if parsed_args.dry_run:
-                    print(f"Would sync archived repo: {owner}/{repo} to {archive_dir}")
-                else:
-                    sync_repo(owner, repo, archive_dir)
+                for repo in archived_repos:
+                    if parsed_args.dry_run:
+                        print(f"Would sync archived repo: {owner}/{repo} to {archive_dir}")
+                    else:
+                        sync_repo(owner, repo, archive_dir)
+            else:
+                print(f"Skipping archived repositories for {owner} (configured to ignore)")
 
 
 if __name__ == "__main__":
