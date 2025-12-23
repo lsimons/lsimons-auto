@@ -237,7 +237,9 @@ def main(args: Optional[list[str]] = None) -> None:
         
         # Sync any other existing repos in the directories
         fetch_directory_repos(owner_dir, visited_repos, parsed_args.dry_run)
-        if archive_dir.exists():
+        
+        # Only scan archive directory if archives are included
+        if parsed_args.include_archive and archive_dir.exists():
             fetch_directory_repos(archive_dir, visited_repos, parsed_args.dry_run)
 
 
