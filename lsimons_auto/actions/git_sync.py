@@ -98,9 +98,13 @@ def get_repos(owner: str, archive: bool = False) -> list[str]:
     return filtered_repos
 
 
-def sync_repo(owner: str, repo_name: str, target_dir: Path) -> None:
-    """Sync a single repository."""
+def sync_repo(owner: str, repo_name: str, target_dir: Path) -> bool:
+    """
+    Sync a single repository.
+    Returns True if successful, False otherwise.
+    """
     repo_path = target_dir / repo_name
+    success = False
     
     if repo_path.exists():
         # git fetch --all
@@ -114,6 +118,34 @@ def sync_repo(owner: str, repo_name: str, target_dir: Path) -> None:
 
     if not success:
         print(f"Failed to sync {owner}/{repo_name}")
+    
+    return success
+
+
+def fetch_directory_repos(
+    directory: Path, visited_repos: set[Path], dry_run: bool = False
+) -> None:
+    """Run git fetch on all git repositories in a directory that haven't been visited."""
+    if not directory.exists():
+        return
+
+    print(f"Scanning {directory} for additional repositories...")
+    
+    # Iterate over subdirectories
+    for item in directory.iterdir():
+        if not item.is_dir():
+            continue
+            
+        # Check if it's a git repo
+        if (item / ".git").exists():
+            if item.resolve() in visited_repos:
+                continue
+                
+            if dry_run:
+                print(f"Would fetch existing repo: {item}")
+            else:
+                print(f"Fetching existing repo: {item.name}...")
+                run_command(["git", "fetch", "--all"], cwd=item)
 
 
 def main(args: Optional[list[str]] = None) -> None:
@@ -155,6 +187,9 @@ def main(args: Optional[list[str]] = None) -> None:
         local_dirname = config.local_dir if config.local_dir else owner
         owner_dir = base_dir / local_dirname
         archive_dir = owner_dir / "archive"
+        
+        # Track visited repos to avoid double-fetching
+        visited_repos: set[Path] = set()
 
         # Create directories
         if not parsed_args.dry_run:
@@ -174,6 +209,9 @@ def main(args: Optional[list[str]] = None) -> None:
         print(f"Found {len(active_repos)} active repositories for {owner}.")
 
         for repo in active_repos:
+            repo_path = (owner_dir / repo).resolve()
+            visited_repos.add(repo_path)
+            
             if parsed_args.dry_run:
                 print(f"Would sync active repo: {owner}/{repo} to {owner_dir}")
             else:
@@ -187,12 +225,20 @@ def main(args: Optional[list[str]] = None) -> None:
                 print(f"Found {len(archived_repos)} archived repositories for {owner}.")
 
                 for repo in archived_repos:
+                    repo_path = (archive_dir / repo).resolve()
+                    visited_repos.add(repo_path)
+
                     if parsed_args.dry_run:
                         print(f"Would sync archived repo: {owner}/{repo} to {archive_dir}")
                     else:
                         sync_repo(owner, repo, archive_dir)
             else:
                 print(f"Skipping archived repositories for {owner} (configured to ignore)")
+        
+        # Sync any other existing repos in the directories
+        fetch_directory_repos(owner_dir, visited_repos, parsed_args.dry_run)
+        if archive_dir.exists():
+            fetch_directory_repos(archive_dir, visited_repos, parsed_args.dry_run)
 
 
 if __name__ == "__main__":
