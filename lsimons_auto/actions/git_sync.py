@@ -2,9 +2,9 @@
 """
 git_sync.py - Synchronize GitHub repositories
 
-This action fetches all repositories for user 'lsimons' and syncs them locally.
-Active repos go to ~/git/lsimons.
-Archived repos go to ~/git/lsimons/archive.
+This action fetches repositories for configured owners and syncs them locally.
+Active repos go to ~/git/<owner> (or configured local dir).
+Archived repos go to ~/git/<owner>/archive (if enabled).
 """
 
 import argparse
@@ -20,6 +20,13 @@ class OwnerConfig(NamedTuple):
     name: str
     local_dir: Optional[str] = None
     allow_archived: bool = True
+
+
+OWNER_CONFIGS = [
+    OwnerConfig(name="lsimons"),
+    OwnerConfig(name="typelinkmodel"),
+    OwnerConfig(name="LAB271", local_dir="labs", allow_archived=False),
+]
 
 
 def run_command(cmd: list[str], cwd: Optional[Path] = None) -> bool:
@@ -111,7 +118,11 @@ def sync_repo(owner: str, repo_name: str, target_dir: Path) -> None:
 
 def main(args: Optional[list[str]] = None) -> None:
     """Main function that performs the action work."""
-    parser = argparse.ArgumentParser(description="Synchronize GitHub repositories")
+    available_owners = ", ".join(cfg.name for cfg in OWNER_CONFIGS)
+    parser = argparse.ArgumentParser(
+        description=f"Synchronize GitHub repositories. Available owners: {available_owners}",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
     parser.add_argument(
         "--dry-run", action="store_true", help="Print what would be done without doing it"
     )
@@ -120,17 +131,25 @@ def main(args: Optional[list[str]] = None) -> None:
         action="store_true",
         help="Include archived repositories in the sync",
     )
+    parser.add_argument(
+        "-o",
+        "--owner",
+        help="Specific owner to sync (default: all)",
+        choices=[cfg.name for cfg in OWNER_CONFIGS],
+    )
     parsed_args = parser.parse_args(args)
 
     base_dir = Path.home() / "git"
-    
-    owners = [
-        OwnerConfig(name="lsimons"),
-        OwnerConfig(name="typelinkmodel"),
-        OwnerConfig(name="LAB271", local_dir="labs", allow_archived=False),
-    ]
 
-    for config in owners:
+    # Filter owners if specific one requested
+    if parsed_args.owner:
+        configs_to_process = [
+            cfg for cfg in OWNER_CONFIGS if cfg.name == parsed_args.owner
+        ]
+    else:
+        configs_to_process = OWNER_CONFIGS
+
+    for config in configs_to_process:
         owner = config.name
         # Use custom local directory if specified, otherwise use owner name
         local_dirname = config.local_dir if config.local_dir else owner
