@@ -65,12 +65,12 @@ exec "{venv_python}" "{target_script}" "$@"
 """
 
     # Handle existing files
-    if wrapper_path.exists():
-        if wrapper_path.read_text().strip() == wrapper_content.strip():
+    if wrapper_path.exists() or wrapper_path.is_symlink():
+        if wrapper_path.exists() and wrapper_path.read_text().strip() == wrapper_content.strip():
             print(f"Wrapper script already up-to-date: {wrapper_path}")
             return
         else:
-            print(f"Updating existing wrapper script: {wrapper_path}")
+            print(f"Updating existing wrapper script (overwriting): {wrapper_path}")
             wrapper_path.unlink()
 
     # Create the wrapper script
