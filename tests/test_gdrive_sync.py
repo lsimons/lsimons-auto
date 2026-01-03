@@ -26,11 +26,13 @@ class TestGdriveSync(unittest.TestCase):
 
     @patch('socket.gethostname')
     @patch('os.path.ismount')
+    @patch('os.path.exists')
     @patch('shutil.which')
-    def test_rclone_missing(self, mock_which, mock_ismount, mock_hostname):
+    def test_rclone_missing(self, mock_which, mock_exists, mock_ismount, mock_hostname):
         mock_hostname.return_value = "paddo"
         mock_ismount.return_value = True
-        mock_which.return_value = None
+        mock_exists.return_value = False  # Ensure absolute path check fails
+        mock_which.return_value = None    # Ensure PATH check fails
         
         with patch('builtins.print') as mock_print:
             with self.assertRaises(SystemExit) as cm:
@@ -40,11 +42,13 @@ class TestGdriveSync(unittest.TestCase):
 
     @patch('socket.gethostname')
     @patch('os.path.ismount')
+    @patch('os.path.exists')
     @patch('shutil.which')
     @patch('subprocess.run')
-    def test_sync_success(self, mock_run, mock_which, mock_ismount, mock_hostname):
+    def test_sync_success(self, mock_run, mock_which, mock_exists, mock_ismount, mock_hostname):
         mock_hostname.return_value = "paddo"
         mock_ismount.return_value = True
+        mock_exists.return_value = True
         mock_which.return_value = "/usr/bin/rclone"
         
         with patch('builtins.print') as mock_print:
@@ -52,7 +56,9 @@ class TestGdriveSync(unittest.TestCase):
             
             mock_run.assert_called_once()
             args = mock_run.call_args[0][0]
-            self.assertEqual(args[:2], ["rclone", "sync"])
+            # args[0] might be absolute path or "rclone" depending on system
+            self.assertTrue(args[0].endswith("rclone"))
+            self.assertEqual(args[1], "sync")
             self.assertEqual(args[3], "/Volumes/LSData/Google Drive")
             
             mock_print.assert_any_call("Sync completed successfully.")
