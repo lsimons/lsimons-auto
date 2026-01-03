@@ -80,7 +80,7 @@ exec "{venv_python}" "{target_script}" "$@"
 
 
 def install_launch_agent() -> None:
-    """Install macOS LaunchAgent for daily execution."""
+    """Install macOS LaunchAgents."""
     # Create ~/.local/log directory for LaunchAgent logs
     local_log_dir = Path.home() / ".local" / "log"
     if not local_log_dir.exists():
@@ -94,37 +94,44 @@ def install_launch_agent() -> None:
 
     # Get the absolute path to the plist template
     script_dir = Path(__file__).parent.absolute()
-    plist_template_path = script_dir / "etc" / "com.leosimons.start-the-day.plist"
-
-    if not plist_template_path.exists():
-        print(f"Error: {plist_template_path} not found")
-        sys.exit(1)
-
-    # Read plist template and replace username
-    plist_content = plist_template_path.read_text()
-    plist_content = plist_content.replace("/Users/lsimons/", f"/Users/{username}/")
-
-    # Install to ~/Library/LaunchAgents/
+    
+    # List of plist templates to install
+    plist_files = [
+        "com.leosimons.start-the-day.plist",
+        "com.leosimons.gdrive-sync.plist"
+    ]
+    
     launch_agents_dir = Path.home() / "Library" / "LaunchAgents"
     if not launch_agents_dir.exists():
         print(f"Creating directory: {launch_agents_dir}")
         launch_agents_dir.mkdir(parents=True, exist_ok=True)
 
-    plist_dest_path = launch_agents_dir / "com.leosimons.start-the-day.plist"
+    for plist_file in plist_files:
+        plist_template_path = script_dir / "etc" / plist_file
 
-    # Write the customized plist
-    print(f"Installing LaunchAgent: {plist_dest_path}")
-    plist_dest_path.write_text(plist_content)
+        if not plist_template_path.exists():
+            print(f"Error: {plist_template_path} not found")
+            continue
 
-    # Load the LaunchAgent
-    print("Loading LaunchAgent...")
-    result = os.system(f"launchctl load {plist_dest_path}")
-    if result == 0:
-        print("LaunchAgent loaded successfully!")
-        print("The script will now run daily at 7:00 AM")
-    else:
-        print("Warning: Failed to load LaunchAgent. You may need to load it manually:")
-        print(f"  launchctl load {plist_dest_path}")
+        # Read plist template and replace username
+        plist_content = plist_template_path.read_text()
+        plist_content = plist_content.replace("/Users/lsimons/", f"/Users/{username}/")
+
+        plist_dest_path = launch_agents_dir / plist_file
+
+        # Write the customized plist
+        print(f"Installing LaunchAgent: {plist_dest_path}")
+        plist_dest_path.write_text(plist_content)
+
+        # Load the LaunchAgent
+        print(f"Loading LaunchAgent {plist_file}...")
+        # Unload first to ensure reload works if it changed
+        os.system(f"launchctl unload {plist_dest_path} 2>/dev/null")
+        result = os.system(f"launchctl load {plist_dest_path}")
+        if result == 0:
+            print(f"LaunchAgent {plist_file} loaded successfully!")
+        else:
+            print(f"Warning: Failed to load LaunchAgent {plist_file}.")
 
 
 def main() -> None:
