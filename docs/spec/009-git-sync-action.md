@@ -33,4 +33,19 @@
 - Path handling: Use `pathlib` for all path manipulations.
 - The action name is `git_sync.py` (maps to `auto git-sync`).
 
+**Fork Remote Configuration (lsimons-bot):**
+- When authenticated as `lsimons-bot`, automatically configures fork remotes for organization repositories
+- Detects authenticated user via `gh api user`
+- If user is `lsimons-bot`, fetches list of all forks owned by that user
+- For each synced repository:
+  - Checks if fork exists in lsimons-bot's account
+  - If fork exists, configures remote named `lsimons-bot` pointing to the fork
+  - Fetches all branches from fork remote
+- All fork operations are best-effort (failures don't block main sync):
+  - Missing `gh` CLI skips fork configuration
+  - GitHub API errors are reported but sync continues
+  - Per-repo fork failures warn but continue to next repo
+- Respects `--dry-run` flag (prints what would be done)
+- Idempotent: checks for existing `lsimons-bot` remote before adding
+
 **Status:** Implemented

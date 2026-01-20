@@ -24,6 +24,12 @@ class OwnerConfig(NamedTuple):
     hostname_filter: Optional[str] = None
 
 
+class ForkContext(NamedTuple):
+    """Context about GitHub forks for the authenticated user."""
+    username: str
+    fork_map: dict[str, str]  # Maps "owner/repo" -> fork_url
+
+
 OWNER_CONFIGS = [
     OwnerConfig(name="lsimons"),
     OwnerConfig(name="typelinkmodel"),
@@ -100,14 +106,114 @@ def get_repos(owner: str, archive: bool = False) -> list[str]:
     return filtered_repos
 
 
-def sync_repo(owner: str, repo_name: str, target_dir: Path) -> bool:
+def get_authenticated_user() -> Optional[str]:
+    """Get the authenticated GitHub user via gh CLI."""
+    try:
+        result = subprocess.run(
+            ["gh", "api", "user", "--jq", ".login"],
+            check=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+        return result.stdout.strip()
+    except subprocess.CalledProcessError:
+        return None
+    except FileNotFoundError:
+        return None
+
+
+def get_user_forks(username: str) -> dict[str, str]:
+    """Fetch list of forks owned by the user and return a map of parent repo to fork URL."""
+    try:
+        result = subprocess.run(
+            [
+                "gh",
+                "repo",
+                "list",
+                username,
+                "--fork",
+                "--json",
+                "name,parent,url",
+                "-L",
+                "200",
+            ],
+            check=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+        forks_data = json.loads(result.stdout)
+        fork_map = {}
+        for fork in forks_data:
+            parent = fork.get("parent")
+            if parent and isinstance(parent, dict):
+                parent_owner = parent.get("owner", {})
+                parent_owner_login = parent_owner.get("login") if isinstance(parent_owner, dict) else None
+                parent_name = parent.get("name")
+                if parent_owner_login and parent_name:
+                    parent_full_name = f"{parent_owner_login}/{parent_name}"
+                    fork_map[parent_full_name] = fork["url"]
+        return fork_map
+    except subprocess.CalledProcessError:
+        return {}
+    except (json.JSONDecodeError, KeyError):
+        return {}
+
+
+def build_fork_context() -> Optional[ForkContext]:
+    """Build fork context if authenticated user is lsimons-bot."""
+    username = get_authenticated_user()
+    if not username:
+        return None
+    if username != "lsimons-bot":
+        return None
+    fork_map = get_user_forks(username)
+    print(f"Detected fork configuration for {username}")
+    print(f"Found {len(fork_map)} forks to configure")
+    return ForkContext(username=username, fork_map=fork_map)
+
+
+def configure_fork_remote(repo_path: Path, fork_url: str, dry_run: bool) -> bool:
+    """Configure fork remote for a repository."""
+    if dry_run:
+        print(f"Would add remote lsimons-bot for {repo_path.name}")
+        print(f"Would fetch from lsimons-bot remote")
+        return True
+
+    # Check if remote already exists
+    try:
+        result = subprocess.run(
+            ["git", "remote"],
+            cwd=repo_path,
+            check=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+        if "lsimons-bot" in result.stdout:
+            print(f"Remote lsimons-bot already configured for {repo_path.name}")
+        else:
+            print(f"Adding lsimons-bot remote for {repo_path.name}...")
+            if not run_command(["git", "remote", "add", "lsimons-bot", fork_url], cwd=repo_path):
+                return False
+    except subprocess.CalledProcessError:
+        print(f"Warning: Could not check existing remotes for {repo_path.name}")
+        return False
+
+    # Fetch from fork remote
+    print(f"Fetching from lsimons-bot remote for {repo_path.name}...")
+    return run_command(["git", "fetch", "lsimons-bot"], cwd=repo_path)
+
+
+def sync_repo(owner: str, repo_name: str, target_dir: Path, fork_context: Optional[ForkContext] = None, dry_run: bool = False) -> bool:
     """
     Sync a single repository.
     Returns True if successful, False otherwise.
     """
     repo_path = target_dir / repo_name
     success = False
-    
+
     if repo_path.exists():
         # git fetch --all
         print(f"Updating {owner}/{repo_name}...")
@@ -120,7 +226,18 @@ def sync_repo(owner: str, repo_name: str, target_dir: Path) -> bool:
 
     if not success:
         print(f"Failed to sync {owner}/{repo_name}")
-    
+        return success
+
+    # Configure fork remote if available
+    if fork_context and repo_path.exists():
+        repo_full_name = f"{owner}/{repo_name}"
+        if repo_full_name in fork_context.fork_map:
+            fork_url = fork_context.fork_map[repo_full_name]
+            try:
+                configure_fork_remote(repo_path, fork_url, dry_run)
+            except Exception as e:  # pyright: ignore[reportAny]
+                print(f"Warning: Failed to configure fork remote for {repo_name}: {e}")
+
     return success
 
 
@@ -175,6 +292,9 @@ def main(args: Optional[list[str]] = None) -> None:
 
     base_dir = Path.home() / "git"
 
+    # Build fork context once for the entire operation
+    fork_context = build_fork_context()
+
     # Filter owners if specific one requested
     if parsed_args.owner:
         configs_to_process = [
@@ -220,11 +340,11 @@ def main(args: Optional[list[str]] = None) -> None:
         for repo in active_repos:
             repo_path = (owner_dir / repo).resolve()
             visited_repos.add(repo_path)
-            
+
             if parsed_args.dry_run:
                 print(f"Would sync active repo: {owner}/{repo} to {owner_dir}")
             else:
-                sync_repo(owner, repo, owner_dir)
+                sync_repo(owner, repo, owner_dir, fork_context, parsed_args.dry_run)
 
         # Sync archived repos
         if parsed_args.include_archive:
@@ -240,7 +360,7 @@ def main(args: Optional[list[str]] = None) -> None:
                     if parsed_args.dry_run:
                         print(f"Would sync archived repo: {owner}/{repo} to {archive_dir}")
                     else:
-                        sync_repo(owner, repo, archive_dir)
+                        sync_repo(owner, repo, archive_dir, fork_context, parsed_args.dry_run)
             else:
                 print(f"Skipping archived repositories for {owner} (configured to ignore)")
         
