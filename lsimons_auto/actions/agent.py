@@ -382,20 +382,45 @@ def create_layout(
 
 def start_agents_in_panes(panes: list[AgentPane], num_subagents: int) -> None:
     """Navigate to each pane and start the agent command."""
-    # Start from main pane (leftmost)
-    # Navigate to main pane first
-    for _ in range(num_subagents + 1):
+    # Navigate to main pane first (keep going left)
+    for _ in range(5):  # More than enough to reach leftmost
         ghostty_focus_direction("left")
 
     # Start main agent
     ghostty_run_command(panes[0].command)
 
-    # Start subagent commands
-    for i in range(1, len(panes)):
+    if num_subagents == 1:
+        # Layout: main | s1
         ghostty_focus_direction("right")
-        if i >= 2 and num_subagents <= 3:
-            ghostty_focus_direction("down")
-        ghostty_run_command(panes[i].command)
+        ghostty_run_command(panes[1].command)
+
+    elif num_subagents == 2:
+        # Layout: main | s1/s2
+        ghostty_focus_direction("right")
+        ghostty_run_command(panes[1].command)
+        ghostty_focus_direction("down")
+        ghostty_run_command(panes[2].command)
+
+    elif num_subagents == 3:
+        # Layout: main | s1/s2/s3
+        ghostty_focus_direction("right")
+        ghostty_run_command(panes[1].command)
+        ghostty_focus_direction("down")
+        ghostty_run_command(panes[2].command)
+        ghostty_focus_direction("down")
+        ghostty_run_command(panes[3].command)
+
+    elif num_subagents == 4:
+        # Layout: main | s1/s2 | s3/s4
+        ghostty_focus_direction("right")
+        ghostty_run_command(panes[1].command)
+        ghostty_focus_direction("down")
+        ghostty_run_command(panes[2].command)
+        ghostty_focus_direction("up")
+        ghostty_focus_direction("right")
+        ghostty_run_command(panes[3].command)
+        ghostty_focus_direction("down")
+        ghostty_run_command(panes[4].command)
 
 
 # =============================================================================
@@ -542,8 +567,10 @@ def cmd_spawn(args: argparse.Namespace) -> None:
     # Position windows
     position_windows_fill_screen()
 
-    # Focus back to Ghostty
+    # Focus back to Ghostty and start agents
     activate_app("Ghostty")
+    print("Starting agents...")
+    start_agents_in_panes(panes, args.subagents)
 
     # Create and save session
     session = AgentSession(
