@@ -48,6 +48,7 @@ class AgentSession:
     org_name: str  # e.g., "lsimons"
     created_at: str  # ISO timestamp
     panes: list[AgentPane] = field(default_factory=list)
+    window_id: Optional[int] = None  # Ghostty window ID for targeted close
 
     @classmethod
     def load(cls, session_id: str) -> "AgentSession":
@@ -269,6 +270,58 @@ def ghostty_run_command(cmd: str) -> None:
     send_text("Ghostty", cmd)
     press_return("Ghostty")
     time.sleep(APPLESCRIPT_DELAY)
+
+
+def ghostty_get_front_window_id() -> Optional[int]:
+    """Get the ID of the front Ghostty window."""
+    script = '''
+    tell application "System Events"
+        tell process "Ghostty"
+            try
+                return id of front window
+            on error
+                return ""
+            end try
+        end tell
+    end tell
+    '''
+    try:
+        result = run_applescript(script)
+        if result:
+            return int(result)
+    except (ValueError, RuntimeError):
+        pass
+    return None
+
+
+def ghostty_close_window_by_id(window_id: int) -> bool:
+    """Close a specific Ghostty window by its ID. Returns True if successful."""
+    # First, bring the target window to front, then close it
+    script = f'''
+    tell application "System Events"
+        tell process "Ghostty"
+            try
+                set targetWindow to (first window whose id is {window_id})
+                -- Bring to front by setting focused
+                set frontmost to true
+                perform action "AXRaise" of targetWindow
+                return "found"
+            on error
+                return "not_found"
+            end try
+        end tell
+    end tell
+    '''
+    try:
+        result = run_applescript(script)
+        if result != "found":
+            return False
+        # Now close the front window
+        time.sleep(0.2)
+        keystroke("Ghostty", "w", ["command", "shift"])
+        return True
+    except RuntimeError:
+        return False
 
 
 # =============================================================================
@@ -571,6 +624,9 @@ def cmd_spawn(args: argparse.Namespace) -> None:
     print(f"Creating layout with {args.subagents} subagent(s)...")
     panes = create_layout(args.subagents, workspace_path, args.command, repo)
 
+    # Capture window ID for targeted close later
+    window_id = ghostty_get_front_window_id()
+
     # Launch Zed if requested
     if not args.no_zed:
         print("Launching Zed editor...")
@@ -592,6 +648,7 @@ def cmd_spawn(args: argparse.Namespace) -> None:
         org_name=org,
         created_at=datetime.now(timezone.utc).isoformat(),
         panes=panes,
+        window_id=window_id,
     )
     session.save()
 
@@ -799,9 +856,17 @@ def cmd_kill(args: argparse.Namespace) -> None:
             print("Cancelled")
             return
 
-    # Close all panes (close window)
-    activate_app("Ghostty")
-    keystroke("Ghostty", "w", ["command", "shift"])  # Close window
+    # Close the specific window for this session
+    if session.window_id is not None:
+        if ghostty_close_window_by_id(session.window_id):
+            print(f"Closed window {session.window_id}")
+        else:
+            # Window may have been manually closed, that's okay
+            print(f"Window {session.window_id} not found (may already be closed)")
+    else:
+        # Fallback for sessions created before window tracking
+        activate_app("Ghostty")
+        keystroke("Ghostty", "w", ["command", "shift"])  # Close window
 
     # Delete session
     session.delete()
