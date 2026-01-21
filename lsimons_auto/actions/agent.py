@@ -251,12 +251,12 @@ def ghostty_split_down() -> None:
 
 
 def ghostty_focus_direction(direction: str) -> None:
-    """Focus pane in given direction using Option+Arrow."""
+    """Focus pane in given direction using Cmd+Opt+Arrow (Ghostty's goto_split)."""
     # Key codes: left=123, right=124, down=125, up=126
     key_codes = {"left": 123, "right": 124, "down": 125, "up": 126}
     if direction not in key_codes:
         raise ValueError(f"Invalid direction: {direction}. Use: left, right, up, down")
-    key_code("Ghostty", key_codes[direction], ["option"])
+    key_code("Ghostty", key_codes[direction], ["command", "option"])
 
 
 def ghostty_close_pane() -> None:
@@ -382,11 +382,17 @@ def create_layout(
 
 def start_agents_in_panes(panes: list[AgentPane], num_subagents: int) -> None:
     """Navigate to each pane and start the agent command."""
+    # Give Ghostty time to be ready after app switch
+    time.sleep(0.5)
+
     # Navigate to main pane first (keep going left)
-    for _ in range(5):  # More than enough to reach leftmost
+    # Use Cmd+Opt+Left which is Ghostty's goto_split:left
+    for _ in range(3):  # Enough to reach leftmost from any position
         ghostty_focus_direction("left")
+        time.sleep(0.2)
 
     # Start main agent
+    time.sleep(0.3)
     ghostty_run_command(panes[0].command)
 
     if num_subagents == 1:
