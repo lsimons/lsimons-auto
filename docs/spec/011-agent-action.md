@@ -65,4 +65,4 @@
 - Fuzzy matching: case-insensitive substring match, fail if multiple matches
 - Requires System Settings → Privacy & Security → Accessibility permission
 
-**Status:** Draft
+**Status:** Implemented
