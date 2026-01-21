@@ -15,6 +15,8 @@ from pathlib import Path
 from unittest.mock import Mock, patch
 
 from lsimons_auto.actions import agent
+from lsimons_auto.actions.agent_impl import session as agent_session
+from lsimons_auto.actions.agent_impl import ghostty as agent_ghostty
 
 
 class TestWorkspaceDiscovery(unittest.TestCase):
@@ -133,7 +135,7 @@ class TestSessionManagement(unittest.TestCase):
         """Test session round-trip through disk."""
         with tempfile.TemporaryDirectory() as tmpdir:
             sessions_dir = Path(tmpdir) / "sessions"
-            with patch.object(agent, "SESSIONS_DIR", sessions_dir):
+            with patch.object(agent_session, "SESSIONS_DIR", sessions_dir):
                 session = agent.AgentSession(
                     session_id="test-session",
                     workspace_path="/test/path",
@@ -162,7 +164,7 @@ class TestSessionManagement(unittest.TestCase):
         """Test session deletion."""
         with tempfile.TemporaryDirectory() as tmpdir:
             sessions_dir = Path(tmpdir) / "sessions"
-            with patch.object(agent, "SESSIONS_DIR", sessions_dir):
+            with patch.object(agent_session, "SESSIONS_DIR", sessions_dir):
                 session = agent.AgentSession(
                     session_id="test-session",
                     workspace_path="/test/path",
@@ -184,7 +186,7 @@ class TestSessionManagement(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmpdir:
             sessions_dir = Path(tmpdir) / "sessions"
             sessions_dir.mkdir(parents=True)
-            with patch.object(agent, "SESSIONS_DIR", sessions_dir):
+            with patch.object(agent_session, "SESSIONS_DIR", sessions_dir):
                 with self.assertRaises(FileNotFoundError):
                     agent.AgentSession.load("nonexistent")
 
@@ -196,7 +198,7 @@ class TestListSessions(unittest.TestCase):
         """Test listing sessions when none exist."""
         with tempfile.TemporaryDirectory() as tmpdir:
             sessions_dir = Path(tmpdir) / "sessions"
-            with patch.object(agent, "SESSIONS_DIR", sessions_dir):
+            with patch.object(agent_session, "SESSIONS_DIR", sessions_dir):
                 sessions = agent.list_sessions()
                 self.assertEqual(sessions, [])
 
@@ -219,7 +221,7 @@ class TestListSessions(unittest.TestCase):
                 with open(sessions_dir / f"test-session-{i}.json", "w") as f:
                     json.dump(session_data, f)
 
-            with patch.object(agent, "SESSIONS_DIR", sessions_dir):
+            with patch.object(agent_session, "SESSIONS_DIR", sessions_dir):
                 sessions = agent.list_sessions()
                 self.assertEqual(len(sessions), 3)
 
@@ -242,7 +244,7 @@ class TestListSessions(unittest.TestCase):
                 with open(sessions_dir / f"test-session-{i}.json", "w") as f:
                     json.dump(session_data, f)
 
-            with patch.object(agent, "SESSIONS_DIR", sessions_dir):
+            with patch.object(agent_session, "SESSIONS_DIR", sessions_dir):
                 session = agent.get_most_recent_session()
                 self.assertIsNotNone(session)
 
@@ -250,7 +252,7 @@ class TestListSessions(unittest.TestCase):
         """Test getting most recent session when none exist."""
         with tempfile.TemporaryDirectory() as tmpdir:
             sessions_dir = Path(tmpdir) / "sessions"
-            with patch.object(agent, "SESSIONS_DIR", sessions_dir):
+            with patch.object(agent_session, "SESSIONS_DIR", sessions_dir):
                 session = agent.get_most_recent_session()
                 self.assertIsNone(session)
 
@@ -382,7 +384,7 @@ class TestArgparseSubcommands(unittest.TestCase):
 class TestAppleScriptHelpers(unittest.TestCase):
     """Test AppleScript helper functions."""
 
-    @patch("lsimons_auto.actions.agent.subprocess.run")
+    @patch("lsimons_auto.actions.agent_impl.ghostty.subprocess.run")
     def test_run_applescript_success(self, mock_run: Mock) -> None:
         """Test successful AppleScript execution."""
         mock_run.return_value = Mock(stdout="output\n", stderr="")
@@ -395,7 +397,7 @@ class TestAppleScriptHelpers(unittest.TestCase):
         self.assertEqual(args[0], "osascript")
         self.assertEqual(args[1], "-e")
 
-    @patch("lsimons_auto.actions.agent.subprocess.run")
+    @patch("lsimons_auto.actions.agent_impl.ghostty.subprocess.run")
     def test_run_applescript_failure(self, mock_run: Mock) -> None:
         """Test AppleScript failure handling."""
         mock_run.side_effect = subprocess.CalledProcessError(
@@ -406,7 +408,7 @@ class TestAppleScriptHelpers(unittest.TestCase):
             agent.run_applescript("invalid script")
         self.assertIn("AppleScript failed", str(cm.exception))
 
-    @patch("lsimons_auto.actions.agent.subprocess.run")
+    @patch("lsimons_auto.actions.agent_impl.ghostty.subprocess.run")
     def test_run_applescript_not_found(self, mock_run: Mock) -> None:
         """Test handling when osascript is not found."""
         mock_run.side_effect = FileNotFoundError()
@@ -474,7 +476,7 @@ class TestCmdList(unittest.TestCase):
         """Test list command with no sessions."""
         with tempfile.TemporaryDirectory() as tmpdir:
             sessions_dir = Path(tmpdir) / "sessions"
-            with patch.object(agent, "SESSIONS_DIR", sessions_dir):
+            with patch.object(agent_session, "SESSIONS_DIR", sessions_dir):
                 parser = agent.create_parser()
                 args = parser.parse_args(["list"])
                 # Should not raise
@@ -497,11 +499,101 @@ class TestCmdList(unittest.TestCase):
             with open(sessions_dir / "test-session.json", "w") as f:
                 json.dump(session_data, f)
 
-            with patch.object(agent, "SESSIONS_DIR", sessions_dir):
+            with patch.object(agent_session, "SESSIONS_DIR", sessions_dir):
                 parser = agent.create_parser()
                 args = parser.parse_args(["list", "-v"])
                 # Should not raise
                 agent.cmd_list(args)
+
+
+class TestWorktreeFunctions(unittest.TestCase):
+    """Test git worktree helper functions."""
+
+    def test_ensure_worktrees_dir_creates_directory(self) -> None:
+        """Test that ensure_worktrees_dir creates the correct directory."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            workspace_path = Path(tmpdir) / "my-repo"
+            workspace_path.mkdir()
+
+            worktrees_dir = agent.ensure_worktrees_dir(workspace_path)
+
+            expected_dir = Path(tmpdir) / "my-repo-worktrees"
+            self.assertEqual(worktrees_dir, expected_dir)
+            self.assertTrue(worktrees_dir.exists())
+
+    def test_ensure_worktrees_dir_idempotent(self) -> None:
+        """Test that ensure_worktrees_dir can be called multiple times."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            workspace_path = Path(tmpdir) / "my-repo"
+            workspace_path.mkdir()
+
+            # Call twice
+            worktrees_dir1 = agent.ensure_worktrees_dir(workspace_path)
+            worktrees_dir2 = agent.ensure_worktrees_dir(workspace_path)
+
+            self.assertEqual(worktrees_dir1, worktrees_dir2)
+            self.assertTrue(worktrees_dir2.exists())
+
+
+class TestAgentPaneWorktreePath(unittest.TestCase):
+    """Test AgentPane worktree_path field."""
+
+    def test_agent_pane_with_worktree_path(self) -> None:
+        """Test AgentPane can store worktree path."""
+        pane = agent.AgentPane(
+            id="M-test",
+            pane_index=0,
+            command="claude",
+            is_main=True,
+            worktree_path="/path/to/worktree",
+        )
+        self.assertEqual(pane.worktree_path, "/path/to/worktree")
+
+    def test_agent_pane_worktree_path_default_none(self) -> None:
+        """Test AgentPane worktree_path defaults to None."""
+        pane = agent.AgentPane(
+            id="M-test",
+            pane_index=0,
+            command="claude",
+            is_main=True,
+        )
+        self.assertIsNone(pane.worktree_path)
+
+    def test_session_save_load_with_worktree_path(self) -> None:
+        """Test session save/load preserves worktree paths."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            sessions_dir = Path(tmpdir) / "sessions"
+            with patch.object(agent_session, "SESSIONS_DIR", sessions_dir):
+                session = agent.AgentSession(
+                    session_id="test-session",
+                    workspace_path="/test/path",
+                    repo_name="test-repo",
+                    org_name="test-org",
+                    created_at="2026-01-21T00:00:00Z",
+                    panes=[
+                        agent.AgentPane(
+                            id="M-test",
+                            pane_index=0,
+                            command="claude",
+                            is_main=True,
+                            worktree_path="/worktrees/M",
+                        ),
+                        agent.AgentPane(
+                            id="001-test",
+                            pane_index=1,
+                            command="claude",
+                            is_main=False,
+                            worktree_path="/worktrees/001",
+                        ),
+                    ],
+                )
+                session.save()
+
+                loaded = agent.AgentSession.load("test-session")
+
+                self.assertEqual(len(loaded.panes), 2)
+                self.assertEqual(loaded.panes[0].worktree_path, "/worktrees/M")
+                self.assertEqual(loaded.panes[1].worktree_path, "/worktrees/001")
 
 
 if __name__ == "__main__":
