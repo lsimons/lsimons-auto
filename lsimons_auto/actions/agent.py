@@ -292,8 +292,9 @@ def create_layout(
     activate_app("Ghostty")
     ghostty_new_window()
 
-    # Change to workspace directory
+    # Change to workspace directory and clear screen
     ghostty_run_command(f"cd {workspace_path}")
+    ghostty_run_command("clear")
 
     # Main pane
     main_pane = AgentPane(
@@ -308,6 +309,7 @@ def create_layout(
         # Split right for first subagent
         ghostty_split_right()
         ghostty_run_command(f"cd {workspace_path}")
+        ghostty_run_command("clear")
         panes.append(
             AgentPane(
                 id=f"001-{repo_name}",
@@ -321,6 +323,7 @@ def create_layout(
         # Split down for second subagent
         ghostty_split_down()
         ghostty_run_command(f"cd {workspace_path}")
+        ghostty_run_command("clear")
         panes.append(
             AgentPane(
                 id=f"002-{repo_name}",
@@ -334,6 +337,7 @@ def create_layout(
         # Split down again for third subagent
         ghostty_split_down()
         ghostty_run_command(f"cd {workspace_path}")
+        ghostty_run_command("clear")
         panes.append(
             AgentPane(
                 id=f"003-{repo_name}",
@@ -351,6 +355,7 @@ def create_layout(
         ghostty_focus_direction("up")  # Now at s1
         ghostty_split_right()
         ghostty_run_command(f"cd {workspace_path}")
+        ghostty_run_command("clear")
         panes.append(
             AgentPane(
                 id=f"003-{repo_name}",
@@ -361,6 +366,7 @@ def create_layout(
         )
         ghostty_split_down()
         ghostty_run_command(f"cd {workspace_path}")
+        ghostty_run_command("clear")
         # Re-number panes 3 and 4
         panes[3] = AgentPane(
             id=f"003-{repo_name}",
