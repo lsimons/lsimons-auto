@@ -41,6 +41,73 @@ class ForkContext(NamedTuple):
     fork_map: dict[str, str]  # Maps "owner/repo" -> fork_url
 
 
+def get_command_output(cmd: list[str], cwd: Optional[Path] = None) -> Optional[str]:
+    """Run a command and return its stdout, or None on failure."""
+    try:
+        result = subprocess.run(
+            cmd,
+            cwd=cwd,
+            check=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+        return result.stdout.strip()
+    except subprocess.CalledProcessError:
+        return None
+
+
+def try_fast_forward(repo_path: Path, dry_run: bool = False) -> bool:
+    """
+    Attempt to fast-forward the local main branch if conditions are met:
+    - Working copy is on 'main' branch
+    - Remote has new commits
+    - Fast-forward is possible
+    - Working copy is clean (no uncommitted changes)
+
+    Returns True if fast-forward was performed (or would be in dry-run), False otherwise.
+    """
+    # Check current branch
+    current_branch = get_command_output(
+        ["git", "rev-parse", "--abbrev-ref", "HEAD"], cwd=repo_path
+    )
+    if current_branch != "main":
+        return False
+
+    # Check if working copy is clean
+    status = get_command_output(["git", "status", "--porcelain"], cwd=repo_path)
+    if status is None or status != "":
+        return False
+
+    # Get local and remote commit hashes
+    local_hash = get_command_output(["git", "rev-parse", "HEAD"], cwd=repo_path)
+    remote_hash = get_command_output(
+        ["git", "rev-parse", "@{upstream}"], cwd=repo_path
+    )
+
+    if local_hash is None or remote_hash is None:
+        return False
+
+    # Already up to date
+    if local_hash == remote_hash:
+        return False
+
+    # Check if fast-forward is possible (local is ancestor of remote)
+    merge_base = get_command_output(
+        ["git", "merge-base", local_hash, remote_hash], cwd=repo_path
+    )
+    if merge_base != local_hash:
+        # Local has diverged, can't fast-forward
+        return False
+
+    if dry_run:
+        print(f"  Would fast-forward {repo_path.name} main branch")
+        return True
+
+    print(f"  Fast-forwarding {repo_path.name}...")
+    return run_command(["git", "merge", "--ff-only", "@{upstream}"], cwd=repo_path)
+
+
 def run_command(cmd: list[str], cwd: Optional[Path] = None) -> bool:
     """
     Run a shell command.
@@ -301,6 +368,8 @@ def sync_repo(
         # git fetch --all
         print(f"Updating {owner}/{repo_name}...")
         success = run_command(["git", "fetch", "--all"], cwd=repo_path)
+        if success:
+            try_fast_forward(repo_path, dry_run)
     else:
         # git clone
         print(f"Cloning {owner}/{repo_name}...")
@@ -346,9 +415,11 @@ def fetch_directory_repos(
 
             if dry_run:
                 print(f"Would fetch existing repo: {item}")
+                try_fast_forward(item, dry_run)
             else:
                 print(f"Fetching existing repo: {item.name}...")
-                run_command(["git", "fetch", "--all"], cwd=item)
+                if run_command(["git", "fetch", "--all"], cwd=item):
+                    try_fast_forward(item, dry_run)
 
 
 def main(args: Optional[list[str]] = None) -> None:
