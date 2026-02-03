@@ -24,4 +24,4 @@
 - Previous meeting search goes back through current year until finding existing doc
 - Base directory configurable via `--base-dir` argument or environment variable `TC_BASE_DIR`
 
-**Status:** Draft
+**Status:** Implemented
