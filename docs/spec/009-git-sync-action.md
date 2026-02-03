@@ -55,4 +55,22 @@
 - Respects `--dry-run` flag (prints what would be done)
 - Idempotent: checks for existing remotes before reconfiguring
 
+**Bot Remote Configuration (non-bot users):**
+- When authenticated as any user OTHER than `lsimons-bot`:
+  - Fetches list of all forks owned by `lsimons-bot`
+  - For each synced repository where `lsimons-bot` has a fork:
+    - Adds/updates a `bot` remote pointing to the fork URL
+    - Fetches from the `bot` remote
+    - Attempts to sync the bot fork if behind origin:
+      - Checks if `bot/main` is behind `origin/main`
+      - If fast-forwardable: uses `gh repo sync lsimons-bot/<repo>` to sync
+      - If diverged or conflicts: prints warning and continues
+- Example valid setup:
+  ```
+  origin  https://github.com/original-org/repo-name.git (fetch/push)
+  bot     https://github.com/lsimons-bot/repo-name.git (fetch/push)
+  ```
+- All bot operations are best-effort (failures don't block main sync)
+- Respects `--dry-run` flag (prints what would be done)
+
 **Status:** Implemented
