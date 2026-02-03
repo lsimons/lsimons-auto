@@ -54,6 +54,10 @@ start-the-day --help
 - **`organize-desktop`** - Organize Desktop files by creation date into dated directories
 - **`update-desktop-background`** - Generate custom desktop background with current UTC time
 - **`launch-apps`** - Launch a set of productivity and communication apps for your daily workflow
+- **`git-sync`** - Fetch and fast-forward all GitHub repositories
+- **`gdrive-sync`** - Sync files to Google Drive (triggered by volume mount)
+- **`tc`** - Technology Council meeting management (subcommands: `prep-meeting`, `gen-pdf`, `create-dirs`)
+- **`agent`** - Launch Claude Code in a tmux session for automated tasks
 - **`echo`** - Simple echo utility for testing the command dispatcher
 
 ### Action Details
@@ -130,6 +134,7 @@ This project follows a spec-based development approach documented in [`docs/spec
 - See [DESIGN.md](DESIGN.md) for architectural decisions and design rationale
 - Reference spec numbers in commit messages during feature implementation
 - Run tests after changes: `uv run pytest`
+- Run type checking: `uv run pyright`
 
 ### Adding New Actions
 1. Create specification in `docs/spec/` following the established template
