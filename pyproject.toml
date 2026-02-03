@@ -29,6 +29,7 @@ typeCheckingMode = "strict"
 
 [dependency-groups]
 dev = [
+    "pyright>=1.1.408",
     "pytest>=8.0.0",
 ]
 
