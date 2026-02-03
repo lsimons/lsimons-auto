@@ -15,7 +15,11 @@ from pathlib import Path
 
 
 def discover_actions() -> dict[str, Path]:
-    """Discover available action scripts in the actions directory."""
+    """Discover available action scripts in the actions directory.
+
+    Returns a dict mapping CLI command names (with dashes) to script paths.
+    E.g., 'git-sync' -> Path('.../actions/git_sync.py')
+    """
     # Determine project root relative to this script file
     # This script is at lsimons_auto/lsimons_auto.py
     # So project root is the parent directory
@@ -28,10 +32,19 @@ def discover_actions() -> dict[str, Path]:
 
     for file_path in actions_dir.glob("*.py"):
         if file_path.name != "__init__.py":
-            action_name = file_path.stem
+            # Convert Python naming (underscores) to CLI naming (dashes)
+            action_name = file_path.stem.replace("_", "-")
             actions[action_name] = file_path
 
     return actions
+
+
+def normalize_action_name(name: str) -> str:
+    """Normalize action name to CLI convention (dashes).
+
+    Accepts both 'git-sync' and 'git_sync', returns 'git-sync'.
+    """
+    return name.replace("_", "-")
 
 
 def main() -> None:
@@ -51,34 +64,35 @@ def main() -> None:
     if len(sys.argv) < 2:
         parser.print_help()
         print("\nAvailable actions:")
-        for action_name in sorted(actions.keys()):
-            print(f"  {action_name:<12} Run {action_name} action")
-        print("\nUse 'lsimons_auto <action> --help' for help on a specific action")
-        return
-
-    action_name = sys.argv[1]
-    remaining = sys.argv[2:]
-
-    # Handle help for dispatcher
-    if action_name in ["-h", "--help"]:
-        parser.print_help()
-        print("\nAvailable actions:")
-        for action_name in sorted(actions.keys()):
-            print(f"  {action_name:<12} Run {action_name} action")
+        for name in sorted(actions.keys()):
+            print(f"  {name:<24} Run {name} action")
         print("\nUse 'auto <action> --help' for help on a specific action")
         return
 
-    args = argparse.Namespace(action=action_name)
+    action_input = sys.argv[1]
+    remaining = sys.argv[2:]
 
-    if args.action not in actions:
-        print(f"Error: Unknown action '{args.action}'")
+    # Handle help for dispatcher
+    if action_input in ["-h", "--help"]:
+        parser.print_help()
         print("\nAvailable actions:")
-        for action_name in sorted(actions.keys()):
-            print(f"  {action_name}")
+        for name in sorted(actions.keys()):
+            print(f"  {name:<24} Run {name} action")
+        print("\nUse 'auto <action> --help' for help on a specific action")
+        return
+
+    # Normalize action name (accept both dashes and underscores)
+    action_name = normalize_action_name(action_input)
+
+    if action_name not in actions:
+        print(f"Error: Unknown action '{action_input}'")
+        print("\nAvailable actions:")
+        for name in sorted(actions.keys()):
+            print(f"  {name}")
         sys.exit(1)
 
     # Execute the action script using subprocess
-    action_script = actions[args.action]
+    action_script = actions[action_name]
     cmd = [sys.executable, str(action_script)] + remaining
 
     try:
@@ -92,7 +106,7 @@ def main() -> None:
         print("\nInterrupted by user")
         sys.exit(130)
     except Exception as e:
-        print(f"Error executing action '{args.action}': {e}")
+        print(f"Error executing action '{action_name}': {e}")
         sys.exit(1)
 
 

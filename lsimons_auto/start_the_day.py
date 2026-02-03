@@ -136,22 +136,22 @@ def start_the_day() -> None:
     print(colorize_text("Starting your day...", "blue"))
 
     # Run daily tasks
-    run_command(["auto", "organize_desktop"], "Organizing desktop", "Desktop organized")
+    run_command(["auto", "organize-desktop"], "Organizing desktop", "Desktop organized")
 
     run_command(
-        ["auto", "git_sync"],
+        ["auto", "git-sync"],
         "Syncing git repositories",
         "Git repositories synced",
     )
 
     # run_command(
-    #     ["auto", "update_desktop_background"],
+    #     ["auto", "update-desktop-background"],
     #     "Updating desktop background",
     #     "Desktop background updated",
     # )
 
     # run_command(
-    #     ["auto", "launch_apps"],
+    #     ["auto", "launch-apps"],
     #     "Launching apps",
     #     "Apps launched",
     # )

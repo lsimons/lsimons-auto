@@ -241,11 +241,11 @@ class TestActionsIntegration(unittest.TestCase):
         """Test that dispatcher discovers all available actions."""
         result = self.run_command([sys.executable, str(self.dispatcher_script)])
 
-        # Should discover multiple action files
+        # Should discover multiple action files (displayed with dashes)
         self.assertIn("echo", result.stdout)
-        self.assertIn("organize_desktop", result.stdout)
-        self.assertIn("update_desktop_background", result.stdout)
-        self.assertIn("launch_apps", result.stdout)
+        self.assertIn("organize-desktop", result.stdout)
+        self.assertIn("update-desktop-background", result.stdout)
+        self.assertIn("launch-apps", result.stdout)
 
     def test_dispatcher_handles_action_with_no_args(self):
         """Test dispatcher correctly handles action that expects arguments."""
@@ -254,7 +254,7 @@ class TestActionsIntegration(unittest.TestCase):
             [
                 sys.executable,
                 str(self.dispatcher_script),
-                "organize_desktop",
+                "organize-desktop",
                 "--dry-run",
             ]
         )
@@ -264,12 +264,12 @@ class TestActionsIntegration(unittest.TestCase):
     def test_dispatcher_unknown_action_shows_available_list(self):
         """Test that error for unknown action shows available actions."""
         result = self.run_command(
-            [sys.executable, str(self.dispatcher_script), "nonexistent_action"],
+            [sys.executable, str(self.dispatcher_script), "nonexistent-action"],
             expect_success=False,
         )
 
         self.assertNotEqual(result.returncode, 0)
-        self.assertIn("Unknown action 'nonexistent_action'", result.stdout)
+        self.assertIn("Unknown action 'nonexistent-action'", result.stdout)
         self.assertIn("Available actions:", result.stdout)
         # Should list actual available actions
         self.assertIn("echo", result.stdout)
@@ -284,11 +284,20 @@ class TestActionsIntegration(unittest.TestCase):
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("Unknown action", result.stdout)
 
-    def test_dispatcher_action_with_dash_in_name(self):
-        """Test actions with dashes (underscores in filename) work correctly."""
-        # organize_desktop becomes organize-desktop (or use underscore)
+    def test_dispatcher_accepts_underscores_for_compatibility(self):
+        """Test that underscores are accepted and converted to dashes."""
+        # Both organize-desktop and organize_desktop should work
         result = self.run_command(
             [sys.executable, str(self.dispatcher_script), "organize_desktop", "--help"]
+        )
+
+        self.assertEqual(result.returncode, 0)
+        self.assertIn("organize", result.stdout.lower())
+
+    def test_dispatcher_action_with_dash_in_name(self):
+        """Test actions with dashes work correctly."""
+        result = self.run_command(
+            [sys.executable, str(self.dispatcher_script), "organize-desktop", "--help"]
         )
 
         self.assertEqual(result.returncode, 0)
