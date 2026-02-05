@@ -1,104 +1,59 @@
-# Agent Instructions
+# Agent Instructions for lsimons-auto
 
-This document provides instructions for AI code-generation agents to ensure consistent and high-quality contributions to the `lsimons-auto` project.
+Personal automation toolkit for macOS with modular CLI (`auto`) and daily routine (`start-the-day`).
 
-## Response Style
+## Quick Reference
 
-- Be concise in responses - avoid over-explaining changes.
-- Focus on the specific task requested rather than extensive commentary.
+- **Install**: `python3 install.py`
+- **Test**: `uv run pytest` (unit tests) or `uv run pytest -m integration` (integration tests)
+- **Lint**: `pyright`
+- **Run**: `auto <action_name>` or `start-the-day`
 
-## Project Overview
+## Structure
 
-The `lsimons-auto` project is a comprehensive personal automation toolkit for macOS. It provides a modular command-line interface (`auto`) for on-demand actions and a scheduled daily routine (`start-the-day`) to establish consistent workflows.
+Actions live in `lsimons_auto/actions/`. Each is a self-contained Python script with `main(args: Optional[list[str]] = None)` function.
 
-- **`auto` CLI**: A unified command dispatcher that dynamically discovers and executes modular "action" scripts.
-- **`start-the-day`**: A separate, scheduled script that runs a sequence of actions each morning.
-- **Spec-Based Development**: All features are first defined in specification documents before implementation.
+**Adding a new action:**
+1. Create spec in `docs/spec/`
+2. Implement in `lsimons_auto/actions/`
+3. Add tests in `tests/`
 
-## Building and Running
+## Guidelines
 
-- **Installation**: `python3 install.py`
-  - This script creates symlinks in `~/.local/bin` and installs a macOS LaunchAgent for the daily routine.
-- **Testing**: `uv run pytest`
-  - Runs the full suite of unit and integration tests.
-- **Running Actions**:
-  - `auto <action_name>` (e.g., `auto organize-desktop`)
-  - `start-the-day`
+**Code quality:**
+- Full type annotations (strict pyright)
+- PEP 8 formatting
+- Unit tests (fast, no side effects) run by default
+- Integration tests marked with `@pytest.mark.integration`
 
-## Development Conventions
+**Specs:** Focus on design decisions, keep under 100 lines, reference shared patterns.
 
-### Adding a New Action
+**Pyright ignores:** Use specific codes like `# pyright: ignore[reportAny]`
 
-1.  **Create a Specification**: Add a new Markdown file in `docs/spec/` that defines the feature's purpose, design, and implementation notes. Follow the existing format (e.g., `000-shared-patterns.md`).
-2.  **Implement the Action**: Create a new Python script in `lsimons_auto/actions/`.
-    - The script must be executable.
-    - It should include a `main(args: Optional[list[str]] = None)` function.
-    - Use the `argparse` module for command-line argument handling.
-3.  **Add Tests**: Create a corresponding test file in the `tests/` directory.
+## Commit Message Convention
 
-### Testing
+Follow [Conventional Commits](https://conventionalcommits.org/):
 
-- **Unit tests**: Fast tests with no side effects (run by default with `uv run pytest`)
-- **Integration tests**: End-to-end tests with real side effects (file I/O, subprocess calls)
-  - Mark integration test classes with `@pytest.mark.integration`
-  - Run explicitly with `uv run pytest -m integration`
-  - Skipped by default to keep test runs fast
-- **Test separation**: Unit tests validate logic, integration tests validate real-world behavior
-- **Default behavior**: `uv run pytest` runs only unit tests (fast feedback loop)
+**Format:** `type(scope): description`
 
-### Code Style
+**Types:** `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `build`, `ci`, `perf`, `revert`, `improvement`, `chore`
 
-- **Typing**: The project uses strict type checking with `pyright`. All new code must be fully type-hinted.
-- **Formatting**: Follow standard Python formatting guidelines (PEP 8).
-- **Modularity**: Actions should be self-contained and independent.
+Reference spec numbers: `feat(actions): implement organize-desktop (spec-004)`
 
-### Commits
+## Session Completion
 
-- Reference the relevant spec number in commit messages (e.g., "feat(actions): Implement organize-desktop action (spec-004)").
+Work is NOT complete until `git push` succeeds.
 
-### Specification Writing
-
-- Focus on design decisions and rationale, not implementation details.
-- Keep specs under 100 lines when possible - longer specs likely need splitting.
-- Reference shared patterns (action scripts, testing, installation) rather than repeating.
-- Include code only for critical design interfaces, not full implementations.
-- Use bullet points for lists rather than verbose paragraphs.
-- Eliminate sections that would be identical across multiple specs.
-
-### Diagnostic Handling
-
-For diagnostic warnings, use specific Pyright ignore comments with error codes:
-- `# pyright: ignore[reportAny]` for "Type is Any" warnings
-- `# pyright: ignore[reportImplicitOverride]` for unittest method override warnings
-- Use `_ = function_call()` assignment for unused return value warnings.
-
-## If Unsure
-
-1. Re-read [AGENTS.md](AGENTS.md)
-2. Look at an existing similar spec or action
-3. Propose a tiny spec stub if direction unclear
-4. Keep the PR small
-
-## Landing the Plane (Session Completion)
-
-**When ending a work session**, complete all steps below. Work is NOT complete until `git push` succeeds.
-
-**MANDATORY WORKFLOW:**
-
-1. **File issues for remaining work** - Note anything that needs follow-up
-2. **Run quality gates** (if code changed) - Tests, linters, builds
-3. **PUSH TO REMOTE** - This is MANDATORY:
+1. **Quality gates** (if code changed):
    ```bash
-   git pull --rebase
-   git push
-   git status  # MUST show "up to date with origin"
+   uv run pytest
+   pyright
    ```
-4. **Clean up** - Clear stashes, prune remote branches
-5. **Verify** - All changes committed AND pushed
-6. **Hand off** - Provide context for next session
 
-**CRITICAL RULES:**
-- Work is NOT complete until `git push` succeeds
-- NEVER stop before pushing - that leaves work stranded locally
-- NEVER say "ready to push when you are" - YOU must push
-- If push fails, resolve and retry until it succeeds
+2. **Push**:
+   ```bash
+   git pull --rebase && git push
+   git status  # must show "up to date with origin"
+   ```
+
+Never stop before pushing. If push fails, resolve and retry.
