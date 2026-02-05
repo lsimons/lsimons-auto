@@ -13,7 +13,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from lsimons_auto.actions.agent_impl import cli, session
+from lsimons_auto.actions.agent_manager_impl import cli, session
 
 
 class TestArgparseSubcommands(unittest.TestCase):

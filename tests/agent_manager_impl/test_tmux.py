@@ -9,7 +9,7 @@ import subprocess
 import unittest
 from unittest.mock import Mock, patch
 
-from lsimons_auto.actions.agent_impl import tmux
+from lsimons_auto.actions.agent_manager_impl import tmux
 
 
 class TestTmuxHelpers(unittest.TestCase):

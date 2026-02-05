@@ -1,18 +1,18 @@
 #!/usr/bin/env python3
 """
-agent.py - Manage multiple Claude Code CLI instances in tmux
+agent_manager.py - Manage multiple Claude Code CLI instances in tmux
 
 Spawns tmux sessions with configurable agent pane layouts, integrates with
 Zed editor, and provides session management for multi-agent workflows.
 
-This module is a thin wrapper that delegates to the agent_impl package.
-All implementation is in lsimons_auto/actions/agent_impl/.
+This module is a thin wrapper that delegates to the agent_manager_impl package.
+All implementation is in lsimons_auto/actions/agent_manager_impl/.
 """
 
 # Handle both package import and direct script execution
 try:
-    # Package import (when imported as lsimons_auto.actions.agent)
-    from .agent_impl import (
+    # Package import (when imported as lsimons_auto.actions.agent_manager)
+    from .agent_manager_impl import (
         GIT_ROOT,
         SESSIONS_DIR,
         AgentPane,
@@ -25,7 +25,7 @@ try:
         list_sessions,
         main,
     )
-    from .agent_impl.cli import (
+    from .agent_manager_impl.cli import (
         cmd_attach,
         cmd_broadcast,
         cmd_close,
@@ -35,8 +35,8 @@ try:
         cmd_send,
         cmd_spawn,
     )
-    from .agent_impl.layout import create_layout, start_agents_in_panes
-    from .agent_impl.tmux import (
+    from .agent_manager_impl.layout import create_layout, start_agents_in_panes
+    from .agent_manager_impl.tmux import (
         attach_session,
         create_session,
         focus_pane_direction,
@@ -49,7 +49,7 @@ try:
         split_pane_horizontal,
         split_pane_vertical,
     )
-    from .agent_impl.worktree import (
+    from .agent_manager_impl.worktree import (
         ensure_worktree,
         ensure_worktrees_dir,
         get_worktree_branch,
@@ -57,8 +57,8 @@ try:
         remove_worktree,
     )
 except ImportError:
-    # Direct script execution (when run as `python agent.py`)
-    from agent_impl import (  # pyright: ignore[reportMissingImports]
+    # Direct script execution (when run as `python agent_manager.py`)
+    from agent_manager_impl import (  # pyright: ignore[reportMissingImports]
         GIT_ROOT,
         SESSIONS_DIR,
         AgentPane,
@@ -71,7 +71,7 @@ except ImportError:
         list_sessions,
         main,
     )
-    from agent_impl.cli import (  # pyright: ignore[reportMissingImports]
+    from agent_manager_impl.cli import (  # pyright: ignore[reportMissingImports]
         cmd_attach,
         cmd_broadcast,
         cmd_close,
@@ -81,11 +81,11 @@ except ImportError:
         cmd_send,
         cmd_spawn,
     )
-    from agent_impl.layout import (  # pyright: ignore[reportMissingImports]
+    from agent_manager_impl.layout import (  # pyright: ignore[reportMissingImports]
         create_layout,
         start_agents_in_panes,
     )
-    from agent_impl.tmux import (  # pyright: ignore[reportMissingImports]
+    from agent_manager_impl.tmux import (  # pyright: ignore[reportMissingImports]
         attach_session,
         create_session,
         focus_pane_direction,
@@ -98,7 +98,7 @@ except ImportError:
         split_pane_horizontal,
         split_pane_vertical,
     )
-    from agent_impl.worktree import (  # pyright: ignore[reportMissingImports]
+    from agent_manager_impl.worktree import (  # pyright: ignore[reportMissingImports]
         ensure_worktree,
         ensure_worktrees_dir,
         get_worktree_branch,

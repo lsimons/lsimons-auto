@@ -1,27 +1,27 @@
 #!/usr/bin/env python3
 """
-Tests for the agent action.
+Tests for the agent-manager action.
 
-This module re-exports tests from tests/agent_impl/ to maintain backwards
-compatibility. All test implementations are in the agent_impl subpackage,
-matching the structure of lsimons_auto/actions/agent_impl/.
+This module re-exports tests from tests/agent_manager_impl/ to maintain backwards
+compatibility. All test implementations are in the agent_manager_impl subpackage,
+matching the structure of lsimons_auto/actions/agent_manager_impl/.
 """
 
 # Re-export all test classes for backwards compatibility
-from tests.agent_impl.test_cli import (
+from tests.agent_manager_impl.test_cli import (
     TestArgparseSubcommands,
     TestCLIHelp,
     TestCmdList,
 )
-from tests.agent_impl.test_session import (
+from tests.agent_manager_impl.test_session import (
     TestAgentPaneWorktreePath,
     TestFindPaneByTarget,
     TestListSessions,
     TestSessionManagement,
 )
-from tests.agent_impl.test_tmux import TestTmuxHelpers
-from tests.agent_impl.test_workspace import TestFuzzyMatching, TestWorkspaceDiscovery
-from tests.agent_impl.test_worktree import TestWorktreeFunctions
+from tests.agent_manager_impl.test_tmux import TestTmuxHelpers
+from tests.agent_manager_impl.test_workspace import TestFuzzyMatching, TestWorkspaceDiscovery
+from tests.agent_manager_impl.test_worktree import TestWorktreeFunctions
 
 __all__ = [
     # Workspace tests

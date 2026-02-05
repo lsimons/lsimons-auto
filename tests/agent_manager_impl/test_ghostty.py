@@ -9,7 +9,7 @@ import subprocess
 import unittest
 from unittest.mock import Mock, patch
 
-from lsimons_auto.actions.agent_impl import ghostty
+from lsimons_auto.actions.agent_manager_impl import ghostty
 
 
 class TestAppleScriptHelpers(unittest.TestCase):

@@ -9,7 +9,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from lsimons_auto.actions.agent_impl import workspace
+from lsimons_auto.actions.agent_manager_impl import workspace
 
 
 class TestWorkspaceDiscovery(unittest.TestCase):

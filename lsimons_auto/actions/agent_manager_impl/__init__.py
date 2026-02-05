@@ -1,5 +1,5 @@
 """
-agent_impl - Implementation package for the agent action.
+agent_manager_impl - Implementation package for the agent-manager action.
 
 This package provides multi-agent Claude Code session management using tmux.
 """

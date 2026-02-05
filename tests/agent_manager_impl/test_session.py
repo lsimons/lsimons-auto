@@ -12,7 +12,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from lsimons_auto.actions.agent_impl import session
+from lsimons_auto.actions.agent_manager_impl import session
 
 
 class TestSessionManagement(unittest.TestCase):

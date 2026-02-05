@@ -9,7 +9,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from lsimons_auto.actions.agent_impl import worktree
+from lsimons_auto.actions.agent_manager_impl import worktree
 
 
 class TestWorktreeFunctions(unittest.TestCase):
