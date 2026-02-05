@@ -18,8 +18,11 @@ from lsimons_auto.actions import update_desktop_background
 class TestUpdateDesktopBackground(unittest.TestCase):
     """Test cases for update_desktop_background action."""
 
+    project_root: Path
+    background_script: Path
+
     @classmethod
-    def setUpClass(cls):
+    def setUpClass(cls) -> None:
         """Set up test environment."""
         cls.project_root = Path.home() / "dev" / "lsimons-auto"
         cls.background_script = (
@@ -37,7 +40,7 @@ class TestUpdateDesktopBackground(unittest.TestCase):
                 f"Background script not found: {cls.background_script}"
             )
 
-    def test_cli_help(self):
+    def test_cli_help(self) -> None:
         """Test command line interface help output."""
         result = subprocess.run(
             [sys.executable, str(self.background_script), "--help"],
@@ -49,7 +52,7 @@ class TestUpdateDesktopBackground(unittest.TestCase):
         self.assertIn("Generate and set desktop background", result.stdout)
         self.assertIn("--dry-run", result.stdout)
 
-    def test_find_available_font(self):
+    def test_find_available_font(self) -> None:
         """Test that font selection returns a valid font path or name."""
         font = update_desktop_background.find_available_font()
 
@@ -62,14 +65,12 @@ class TestUpdateDesktopBackground(unittest.TestCase):
         if font != "Monaco":
             self.assertTrue(Path(font).exists())
 
-    def test_generate_background_creates_image(self):
+    def test_generate_background_creates_image(self) -> None:
         """Test that generate_background creates an image file."""
         import tempfile
 
         # Create a real temporary background
         with tempfile.TemporaryDirectory() as tmpdir:
-            temp_bg_dir = Path(tmpdir) / "backgrounds"
-
             with patch("pathlib.Path.home", return_value=Path(tmpdir)):
                 result = update_desktop_background.generate_background(100, 100)
 
@@ -84,7 +85,7 @@ class TestUpdateDesktopBackground(unittest.TestCase):
             self.assertTrue(result.name.endswith(".png"))
 
     @patch("lsimons_auto.actions.update_desktop_background.subprocess.run")
-    def test_set_desktop_background_success(self, mock_run):
+    def test_set_desktop_background_success(self, mock_run: MagicMock) -> None:
         """Test successful desktop background setting."""
         mock_run.return_value = Mock(stdout="", stderr="")
         test_path = Path("/tmp/test_background.png")
@@ -99,7 +100,7 @@ class TestUpdateDesktopBackground(unittest.TestCase):
         self.assertIn(str(test_path), args[2])
 
     @patch("lsimons_auto.actions.update_desktop_background.subprocess.run")
-    def test_set_desktop_background_failure(self, mock_run):
+    def test_set_desktop_background_failure(self, mock_run: MagicMock) -> None:
         """Test handling of desktop background setting failure."""
         mock_run.side_effect = subprocess.CalledProcessError(
             1, ["osascript"], stderr="Error"
@@ -110,7 +111,7 @@ class TestUpdateDesktopBackground(unittest.TestCase):
             update_desktop_background.set_desktop_background(test_path)
 
     @patch("lsimons_auto.actions.update_desktop_background.subprocess.run")
-    def test_set_desktop_background_osascript_not_found(self, mock_run):
+    def test_set_desktop_background_osascript_not_found(self, mock_run: MagicMock) -> None:
         """Test handling when osascript is not available."""
         mock_run.side_effect = FileNotFoundError()
         test_path = Path("/tmp/test_background.png")
@@ -118,7 +119,7 @@ class TestUpdateDesktopBackground(unittest.TestCase):
         with self.assertRaises(SystemExit):
             update_desktop_background.set_desktop_background(test_path)
 
-    def test_cleanup_old_backgrounds(self):
+    def test_cleanup_old_backgrounds(self) -> None:
         """Test cleanup of old background files."""
         import tempfile
 
@@ -138,8 +139,8 @@ class TestUpdateDesktopBackground(unittest.TestCase):
                 with patch.object(
                     Path,
                     "__truediv__",
-                    side_effect=lambda self, other: (
-                        bg_dir if str(other) == "backgrounds" else Path(self) / other
+                    side_effect=lambda self, other: (  # pyright: ignore[reportUnknownLambdaType]
+                        bg_dir if str(other) == "backgrounds" else Path(self) / other  # pyright: ignore[reportUnknownArgumentType]
                     ),
                 ):
                     # This test is simplified - just verify no crash
@@ -149,7 +150,7 @@ class TestUpdateDesktopBackground(unittest.TestCase):
                         # Mocking is complex here, just verify function structure
                         pass
 
-    def test_cleanup_old_backgrounds_no_directory(self):
+    def test_cleanup_old_backgrounds_no_directory(self) -> None:
         """Test cleanup when backgrounds directory doesn't exist."""
         import tempfile
 
@@ -166,7 +167,7 @@ class TestUpdateDesktopBackground(unittest.TestCase):
     @patch("lsimons_auto.actions.update_desktop_background.generate_background")
     @patch("lsimons_auto.actions.update_desktop_background.set_desktop_background")
     @patch("lsimons_auto.actions.update_desktop_background.cleanup_old_backgrounds")
-    def test_main_normal_execution(self, mock_cleanup, mock_set_bg, mock_generate):
+    def test_main_normal_execution(self, mock_cleanup: MagicMock, mock_set_bg: MagicMock, mock_generate: MagicMock) -> None:
         """Test main function normal execution."""
         mock_generate.return_value = Path("/tmp/test.png")
 
@@ -179,7 +180,7 @@ class TestUpdateDesktopBackground(unittest.TestCase):
     @patch("lsimons_auto.actions.update_desktop_background.generate_background")
     @patch("lsimons_auto.actions.update_desktop_background.set_desktop_background")
     @patch("lsimons_auto.actions.update_desktop_background.cleanup_old_backgrounds")
-    def test_main_dry_run(self, mock_cleanup, mock_set_bg, mock_generate):
+    def test_main_dry_run(self, mock_cleanup: MagicMock, mock_set_bg: MagicMock, mock_generate: MagicMock) -> None:
         """Test main function with --dry-run flag."""
         mock_generate.return_value = Path("/tmp/test.png")
 
@@ -190,7 +191,7 @@ class TestUpdateDesktopBackground(unittest.TestCase):
         mock_cleanup.assert_called_once_with(5)
 
     @patch("lsimons_auto.actions.update_desktop_background.generate_background")
-    def test_main_handles_keyboard_interrupt(self, mock_generate):
+    def test_main_handles_keyboard_interrupt(self, mock_generate: MagicMock) -> None:
         """Test main function handles keyboard interrupt gracefully."""
         mock_generate.side_effect = KeyboardInterrupt()
 
@@ -200,7 +201,7 @@ class TestUpdateDesktopBackground(unittest.TestCase):
         self.assertEqual(cm.exception.code, 1)
 
     @patch("lsimons_auto.actions.update_desktop_background.generate_background")
-    def test_main_handles_general_exception(self, mock_generate):
+    def test_main_handles_general_exception(self, mock_generate: MagicMock) -> None:
         """Test main function handles general exceptions."""
         mock_generate.side_effect = Exception("Test error")
 
@@ -209,7 +210,7 @@ class TestUpdateDesktopBackground(unittest.TestCase):
 
         self.assertEqual(cm.exception.code, 1)
 
-    def test_generate_background_pillow_not_installed(self):
+    def test_generate_background_pillow_not_installed(self) -> None:
         """Test handling when Pillow is not installed."""
         with patch.dict("sys.modules", {"PIL": None}):
             with patch(

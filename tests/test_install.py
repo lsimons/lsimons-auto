@@ -6,12 +6,9 @@ These tests focus on installation functionality including directory creation,
 wrapper script generation, and LaunchAgent installation.
 """
 
-import os
-import subprocess
-import sys
 import unittest
 from pathlib import Path
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import MagicMock, patch
 
 
 class TestInstallScript(unittest.TestCase):
@@ -235,7 +232,7 @@ class TestInstallScript(unittest.TestCase):
         with patch("pathlib.Path") as mock_path_class:
             mock_path = MagicMock()
             mock_path.parent.absolute.return_value = mock_path
-            mock_path.__truediv__ = lambda self, other: mock_path
+            mock_path.__truediv__ = lambda self, other: mock_path  # pyright: ignore[reportUnknownLambdaType]
             mock_path.exists.return_value = False  # Simulate missing files
             mock_path_class.return_value = mock_path
             mock_path_class.__file__ = str(self.install_script)

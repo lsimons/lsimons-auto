@@ -13,7 +13,7 @@ import tempfile
 import unittest
 import subprocess
 from pathlib import Path
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 import pytest
 
 from lsimons_auto.start_the_day import (

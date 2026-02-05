@@ -56,7 +56,7 @@ def main(args: Optional[list[str]] = None) -> None:
     try:
         # Using subprocess to call rclone
         # We allow stdout/stderr to flow to the console
-        result = subprocess.run(
+        subprocess.run(
             [rclone_path, "sync", source, destination, "--verbose"],
             check=True
         )

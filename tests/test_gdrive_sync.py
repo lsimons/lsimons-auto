@@ -1,4 +1,3 @@
-import sys
 import unittest
 from unittest.mock import patch, MagicMock
 from lsimons_auto.actions.gdrive_sync import main
@@ -6,7 +5,7 @@ from lsimons_auto.actions.gdrive_sync import main
 class TestGdriveSync(unittest.TestCase):
     
     @patch('socket.gethostname')
-    def test_wrong_hostname(self, mock_hostname):
+    def test_wrong_hostname(self, mock_hostname: MagicMock) -> None:
         mock_hostname.return_value = "wrong-host"
         with patch('builtins.print') as mock_print:
             main([])
@@ -15,7 +14,7 @@ class TestGdriveSync(unittest.TestCase):
     @patch('socket.gethostname')
     @patch('os.path.ismount')
     @patch('os.path.exists')
-    def test_volume_not_mounted(self, mock_exists, mock_ismount, mock_hostname):
+    def test_volume_not_mounted(self, mock_exists: MagicMock, mock_ismount: MagicMock, mock_hostname: MagicMock) -> None:
         mock_hostname.return_value = "paddo"
         mock_ismount.return_value = False
         mock_exists.return_value = False # Treat as not existing for this test case
@@ -28,7 +27,7 @@ class TestGdriveSync(unittest.TestCase):
     @patch('os.path.ismount')
     @patch('os.path.exists')
     @patch('shutil.which')
-    def test_rclone_missing(self, mock_which, mock_exists, mock_ismount, mock_hostname):
+    def test_rclone_missing(self, mock_which: MagicMock, mock_exists: MagicMock, mock_ismount: MagicMock, mock_hostname: MagicMock) -> None:
         mock_hostname.return_value = "paddo"
         mock_ismount.return_value = True
         mock_exists.return_value = False  # Ensure absolute path check fails
@@ -45,7 +44,7 @@ class TestGdriveSync(unittest.TestCase):
     @patch('os.path.exists')
     @patch('shutil.which')
     @patch('subprocess.run')
-    def test_sync_success(self, mock_run, mock_which, mock_exists, mock_ismount, mock_hostname):
+    def test_sync_success(self, mock_run: MagicMock, mock_which: MagicMock, mock_exists: MagicMock, mock_ismount: MagicMock, mock_hostname: MagicMock) -> None:
         mock_hostname.return_value = "paddo"
         mock_ismount.return_value = True
         mock_exists.return_value = True
