@@ -23,17 +23,27 @@ auto = "lsimons_auto.lsimons_auto:main"
 include = ["lsimons_auto*"]
 exclude = ["etc*"]
 
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W", "UP", "B", "SIM"]
+
 [tool.pyright]
 pythonVersion = "3.13"
 typeCheckingMode = "strict"
 
 [dependency-groups]
 dev = [
-    "pyright>=1.1.408",
     "pytest>=8.0.0",
+    "pytest-cov>=7.0.0",
+    "ruff>=0.8.0",
+    "pyright>=1.1.390",
 ]
 
 [tool.pytest.ini_options]
+testpaths = ["tests"]
 markers = [
     "integration: marks tests as integration tests (deselect with '-m \"not integration\"')",
 ]
