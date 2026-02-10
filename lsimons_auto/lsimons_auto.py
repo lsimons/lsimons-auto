@@ -13,6 +13,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+from lsimons_auto.logging_utils import get_logger
+
 
 def discover_actions() -> dict[str, Path]:
     """Discover available action scripts in the actions directory.
@@ -49,13 +51,14 @@ def normalize_action_name(name: str) -> str:
 
 def main() -> None:
     """Main dispatcher function."""
+    logger = get_logger("lsimons_auto.dispatcher")
     parser = argparse.ArgumentParser(description="lsimons-auto command dispatcher", prog="auto")
 
     actions = discover_actions()
 
     if not actions:
-        print("Error: No actions found in actions directory")
-        print(f"Expected location: {Path(__file__).parent / 'actions'}")
+        logger.error("No actions found in actions directory")
+        logger.error(f"Expected location: {Path(__file__).parent / 'actions'}")
         sys.exit(1)
 
     # Parse arguments manually to handle unknown actions gracefully
@@ -73,20 +76,20 @@ def main() -> None:
     # Handle help for dispatcher
     if action_input in ["-h", "--help"]:
         parser.print_help()
-        print("\nAvailable actions:")
+        logger.info("\nAvailable actions:")
         for name in sorted(actions.keys()):
-            print(f"  {name:<24} Run {name} action")
-        print("\nUse 'auto <action> --help' for help on a specific action")
+            logger.info(f"  {name:<24} Run {name} action")
+        logger.info("\nUse 'auto <action> --help' for help on a specific action")
         return
 
     # Normalize action name (accept both dashes and underscores)
     action_name = normalize_action_name(action_input)
 
     if action_name not in actions:
-        print(f"Error: Unknown action '{action_input}'")
-        print("\nAvailable actions:")
+        logger.error(f"Unknown action '{action_input}'")
+        logger.error("\nAvailable actions:")
         for name in sorted(actions.keys()):
-            print(f"  {name}")
+            logger.error(f"  {name}")
         sys.exit(1)
 
     # Execute the action script using subprocess
@@ -94,17 +97,18 @@ def main() -> None:
     cmd = [sys.executable, str(action_script)] + remaining
 
     try:
+        logger.info(f"Executing action '{action_name}' with command: {' '.join(cmd)}")
         result = subprocess.run(cmd, check=False)  # Don't raise on non-zero exit
         sys.exit(result.returncode)
     except FileNotFoundError:
-        print(f"Error: Action script not found: {action_script}")
-        print("This usually indicates an installation or configuration problem.")
+        logger.error(f"Action script not found: {action_script}")
+        logger.error("This usually indicates an installation or configuration problem.")
         sys.exit(1)
     except KeyboardInterrupt:
-        print("\nInterrupted by user")
+        logger.info("\nInterrupted by user")
         sys.exit(130)
     except Exception as e:
-        print(f"Error executing action '{action_name}': {e}")
+        logger.error(f"Error executing action '{action_name}': {e}")
         sys.exit(1)
 
 
