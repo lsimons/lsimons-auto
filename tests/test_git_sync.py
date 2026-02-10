@@ -8,6 +8,7 @@ import subprocess
 import sys
 import unittest
 from pathlib import Path
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 from lsimons_auto.actions.git_sync import OWNER_CONFIGS, OwnerConfig, main
@@ -40,7 +41,11 @@ class TestGitSyncAction(unittest.TestCase):
     @patch("lsimons_auto.actions.git_sync.build_bot_remote_context")
     @patch("lsimons_auto.actions.git_sync.socket.gethostname")
     def test_main_help_output(
-        self, mock_hostname, mock_bot_context, mock_fork_context, mock_get_output
+        self,
+        mock_hostname: Any,
+        mock_bot_context: Any,
+        mock_fork_context: Any,
+        mock_get_output: Any,
     ) -> None:
         """Test that main help output works."""
         # Mock the GitHub CLI responses to avoid actual API calls
@@ -48,7 +53,7 @@ class TestGitSyncAction(unittest.TestCase):
         mock_fork_context.return_value = MagicMock()
         mock_bot_context.return_value = MagicMock()
         mock_hostname.return_value = "test-machine"
-        
+
         result = subprocess.run(
             [sys.executable, "-m", "lsimons_auto.actions.git_sync", "--help"],
             capture_output=True,
@@ -66,7 +71,11 @@ class TestGitSyncAction(unittest.TestCase):
     @patch("lsimons_auto.actions.git_sync.build_bot_remote_context")
     @patch("lsimons_auto.actions.git_sync.socket.gethostname")
     def test_main_dry_run_flag(
-        self, mock_hostname, mock_bot_context, mock_fork_context, mock_get_output
+        self,
+        mock_hostname: Any,
+        mock_bot_context: Any,
+        mock_fork_context: Any,
+        mock_get_output: Any,
     ) -> None:
         """Test that dry-run flag is accepted."""
         # Mock the GitHub CLI responses
@@ -76,7 +85,7 @@ class TestGitSyncAction(unittest.TestCase):
         mock_fork_context.return_value = MagicMock()
         mock_bot_context.return_value = MagicMock()
         mock_hostname.return_value = "test-machine"
-        
+
         result = subprocess.run(
             [sys.executable, "-m", "lsimons_auto.actions.git_sync", "--dry-run"],
             capture_output=True,
@@ -95,7 +104,11 @@ class TestGitSyncAction(unittest.TestCase):
     @patch("lsimons_auto.actions.git_sync.build_bot_remote_context")
     @patch("lsimons_auto.actions.git_sync.socket.gethostname")
     def test_main_owner_flag(
-        self, mock_hostname, mock_bot_context, mock_fork_context, mock_get_output
+        self,
+        mock_hostname: Any,
+        mock_bot_context: Any,
+        mock_fork_context: Any,
+        mock_get_output: Any,
     ) -> None:
         """Test that owner flag is accepted."""
         # Mock the GitHub CLI responses
@@ -105,7 +118,7 @@ class TestGitSyncAction(unittest.TestCase):
         mock_fork_context.return_value = MagicMock()
         mock_bot_context.return_value = MagicMock()
         mock_hostname.return_value = "test-machine"
-        
+
         result = subprocess.run(
             [sys.executable, "-m", "lsimons_auto.actions.git_sync", "--owner", "lsimons"],
             capture_output=True,
@@ -134,7 +147,11 @@ class TestGitSyncAction(unittest.TestCase):
     @patch("lsimons_auto.actions.git_sync.build_bot_remote_context")
     @patch("lsimons_auto.actions.git_sync.socket.gethostname")
     def test_main_include_archive_flag(
-        self, mock_hostname, mock_bot_context, mock_fork_context, mock_get_output
+        self,
+        mock_hostname: Any,
+        mock_bot_context: Any,
+        mock_fork_context: Any,
+        mock_get_output: Any,
     ) -> None:
         """Test that include-archive flag is accepted."""
         # Mock the GitHub CLI responses
@@ -144,7 +161,7 @@ class TestGitSyncAction(unittest.TestCase):
         mock_fork_context.return_value = MagicMock()
         mock_bot_context.return_value = MagicMock()
         mock_hostname.return_value = "test-machine"
-        
+
         result = subprocess.run(
             [sys.executable, "-m", "lsimons_auto.actions.git_sync", "--include-archive"],
             capture_output=True,
@@ -161,7 +178,11 @@ class TestGitSyncAction(unittest.TestCase):
     @patch("lsimons_auto.actions.git_sync.build_bot_remote_context")
     @patch("lsimons_auto.actions.git_sync.socket.gethostname")
     def test_main_programmatic_dry_run(
-        self, mock_hostname, mock_bot_context, mock_fork_context, mock_get_output
+        self,
+        mock_hostname: Any,
+        mock_bot_context: Any,
+        mock_fork_context: Any,
+        mock_get_output: Any,
     ) -> None:
         """Test main function called programmatically with dry-run."""
         import contextlib
