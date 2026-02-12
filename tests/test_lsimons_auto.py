@@ -2,7 +2,6 @@
 
 import subprocess
 from io import StringIO
-from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -98,10 +97,10 @@ class TestMainDispatcher:
         mock_run.return_value = subprocess.CompletedProcess(
             args=[], returncode=0
         )
-        
+
         with pytest.raises(SystemExit) as exc_info:
             main()
-        
+
         assert exc_info.value.code == 0
         assert mock_run.called
         call_args = mock_run.call_args[0][0]
@@ -115,10 +114,10 @@ class TestMainDispatcher:
         mock_run.return_value = subprocess.CompletedProcess(
             args=[], returncode=0
         )
-        
+
         with pytest.raises(SystemExit) as exc_info:
             main()
-        
+
         assert exc_info.value.code == 0
         call_args = mock_run.call_args[0][0]
         assert "message" in call_args
@@ -131,10 +130,10 @@ class TestMainDispatcher:
         mock_run.return_value = subprocess.CompletedProcess(
             args=[], returncode=0
         )
-        
+
         with pytest.raises(SystemExit) as exc_info:
             main()
-        
+
         # Should work because git_sync is normalized to git-sync
         assert exc_info.value.code == 0
         assert mock_run.called
@@ -146,10 +145,10 @@ class TestMainDispatcher:
         mock_run.return_value = subprocess.CompletedProcess(
             args=[], returncode=42
         )
-        
+
         with pytest.raises(SystemExit) as exc_info:
             main()
-        
+
         assert exc_info.value.code == 42
 
     @patch("sys.argv", ["auto", "echo"])
@@ -158,10 +157,10 @@ class TestMainDispatcher:
     def test_keyboard_interrupt(self, mock_stdout: StringIO, mock_run: MagicMock) -> None:
         """Test KeyboardInterrupt handling."""
         mock_run.side_effect = KeyboardInterrupt()
-        
+
         with pytest.raises(SystemExit) as exc_info:
             main()
-        
+
         assert exc_info.value.code == 130
         assert "Interrupted" in mock_stdout.getvalue()
 
@@ -171,9 +170,9 @@ class TestMainDispatcher:
     def test_file_not_found(self, mock_stdout: StringIO, mock_run: MagicMock) -> None:
         """Test FileNotFoundError handling."""
         mock_run.side_effect = FileNotFoundError()
-        
+
         with pytest.raises(SystemExit) as exc_info:
             main()
-        
+
         assert exc_info.value.code == 1
         assert "Action script not found" in mock_stdout.getvalue()
