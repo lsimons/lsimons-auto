@@ -113,25 +113,34 @@ def compress_cleanshot_image(image_path: Path, target_dir: Path) -> Path:
                     background.paste(img)
                 img = background
 
-            # Start with high quality and reduce until target size reached
-            quality = 95
-            buffer = io.BytesIO()
-            while quality > 10:
+            # Use binary search to find optimal quality level
+            # Start with quality range [10, 95]
+            min_quality = 10
+            max_quality = 95
+            best_buffer = io.BytesIO()
+
+            while min_quality <= max_quality:
+                mid_quality = (min_quality + max_quality) // 2
                 buffer = io.BytesIO()
-                img.save(buffer, format="JPEG", quality=quality, optimize=True)
+                img.save(buffer, format="JPEG", quality=mid_quality, optimize=True)
+                size = len(buffer.getvalue())
 
-                if len(buffer.getvalue()) <= target_size:
-                    break
-                quality -= 5
+                if size <= target_size:
+                    # This quality works, try higher for better quality
+                    best_buffer = buffer
+                    min_quality = mid_quality + 1
+                else:
+                    # Too large, try lower quality
+                    max_quality = mid_quality - 1
 
-            # Save compressed image
+            # Save compressed image with best quality found
             output_path = target_dir / f"{image_path.stem}_compressed.jpg"
             with open(output_path, "wb") as f:
-                f.write(buffer.getvalue())
+                f.write(best_buffer.getvalue())
 
             return output_path
 
-    except Exception as e:
+    except (OSError, IOError) as e:
         print(f"Warning: Could not compress image {image_path.name}: {e}")
         # Fall back to standard move
         output_path = target_dir / image_path.name
