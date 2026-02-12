@@ -10,6 +10,7 @@ import datetime
 import os
 import subprocess
 import sys
+import tomllib
 
 
 def get_config_path(test_mode: bool = False) -> str:
@@ -20,16 +21,14 @@ def get_config_path(test_mode: bool = False) -> str:
 
 
 def parse_toml_simple(content: str) -> dict[str, str]:
-    """Simple TOML parser for our basic needs (last_run_date only)."""
-    config: dict[str, str] = {}
-    for line in content.strip().split("\n"):
-        line = line.strip()
-        if line and not line.startswith("#") and "=" in line:
-            key, value = line.split("=", 1)
-            key = key.strip().strip("\"'")
-            value = value.strip().strip("\"'")
-            config[key] = value
-    return config
+    """Parse TOML content into a flat dictionary using Python's built-in tomllib."""
+    try:
+        data = tomllib.loads(content)
+        # Convert all values to strings for backward compatibility
+        return {str(k): str(v) for k, v in data.items()}
+    except tomllib.TOMLDecodeError as e:
+        print(f"Warning: Could not parse TOML content: {e}")
+        return {}
 
 
 def write_toml_simple(config: dict[str, str], filepath: str) -> None:
@@ -76,8 +75,8 @@ def save_execution_state(config: dict[str, str], test_mode: bool = False) -> Non
 
 
 def get_today_date() -> str:
-    """Get today's date as a string."""
-    return datetime.date.today().isoformat()
+    """Get today's date in UTC as an ISO 8601 string."""
+    return datetime.datetime.now(datetime.timezone.utc).date().isoformat()
 
 
 def already_ran_today(test_mode: bool = False) -> bool:
