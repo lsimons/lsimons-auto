@@ -120,7 +120,7 @@ def compress_cleanshot_image(image_path: Path, target_dir: Path) -> Path:
                 buffer = io.BytesIO()
                 img.save(buffer, format="JPEG", quality=quality, optimize=True)
 
-                if buffer.tell() <= target_size:
+                if len(buffer.getvalue()) <= target_size:
                     break
                 quality -= 5
 
@@ -207,13 +207,14 @@ def organize_file(file_path: Path, target_dir: Path, dry_run: bool = False) -> N
         # Standard file move
         else:
             new_path = target_dir / filename
-            # Handle filename conflicts
-            counter = 1
-            while new_path.exists():
+            # Handle filename conflicts - check existence first
+            if new_path.exists():
                 stem = file_path.stem
                 suffix = file_path.suffix
-                new_path = target_dir / f"{stem}_{counter}{suffix}"
-                counter += 1
+                counter = 1
+                while new_path.exists():
+                    new_path = target_dir / f"{stem}_{counter}{suffix}"
+                    counter += 1
 
             file_path.rename(new_path)
             try:

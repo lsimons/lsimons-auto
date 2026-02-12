@@ -11,6 +11,7 @@ This script:
 """
 
 import os
+import subprocess
 import sys
 from pathlib import Path
 
@@ -119,9 +120,15 @@ def install_launch_agent() -> None:
         # Load the LaunchAgent
         print(f"Loading LaunchAgent {plist_file}...")
         # Unload first to ensure reload works if it changed
-        os.system(f"launchctl unload {plist_dest_path} 2>/dev/null")
-        result = os.system(f"launchctl load {plist_dest_path}")
-        if result == 0:
+        subprocess.run(
+            ["launchctl", "unload", str(plist_dest_path)],
+            stderr=subprocess.DEVNULL,
+            check=False,
+        )
+        result = subprocess.run(
+            ["launchctl", "load", str(plist_dest_path)], check=False
+        )
+        if result.returncode == 0:
             print(f"LaunchAgent {plist_file} loaded successfully!")
         else:
             print(f"Warning: Failed to load LaunchAgent {plist_file}.")
