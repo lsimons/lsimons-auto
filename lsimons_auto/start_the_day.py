@@ -76,7 +76,7 @@ def save_execution_state(config: dict[str, str], test_mode: bool = False) -> Non
 
 def get_today_date() -> str:
     """Get today's date in UTC as an ISO 8601 string."""
-    return datetime.datetime.now(datetime.timezone.utc).date().isoformat()
+    return datetime.datetime.now(datetime.UTC).date().isoformat()
 
 
 def already_ran_today(test_mode: bool = False) -> bool:

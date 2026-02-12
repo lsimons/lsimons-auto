@@ -140,7 +140,7 @@ def compress_cleanshot_image(image_path: Path, target_dir: Path) -> Path:
 
             return output_path
 
-    except (OSError, IOError) as e:
+    except OSError as e:
         print(f"Warning: Could not compress image {image_path.name}: {e}")
         # Fall back to standard move
         output_path = target_dir / image_path.name
