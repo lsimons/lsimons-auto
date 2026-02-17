@@ -1,5 +1,7 @@
 # Agent Instructions for lsimons-auto
 
+> This file (`AGENTS.md`) is the canonical agent configuration. `CLAUDE.md` is a symlink to this file.
+
 Personal automation toolkit for macOS with modular CLI (`auto`) and daily routine (`start-the-day`).
 
 ## Quick Reference
