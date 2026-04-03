@@ -8,6 +8,7 @@ Archived repos go to ~/git/<owner>/archive (if enabled).
 """
 
 import argparse
+import fnmatch
 import json
 import socket
 import subprocess
@@ -24,12 +25,14 @@ class OwnerConfig(NamedTuple):
         local_dir: Optional subdirectory name for local repos (defaults to name)
         allow_archived: Whether to sync archived repositories (default: True)
         hostname_filter: Optional hostname requirement for syncing (default: None)
+        repo_allowlist: Optional glob patterns; if set, only matching repos are synced (default: None)
     """
 
     name: str
     local_dir: str | None = None
     allow_archived: bool = True
     hostname_filter: str | None = None
+    repo_allowlist: tuple[str, ...] | None = None
 
 
 OWNER_CONFIGS = [
@@ -37,6 +40,13 @@ OWNER_CONFIGS = [
     OwnerConfig(name="lsimons-bot"),
     OwnerConfig(name="typelinkmodel"),
     OwnerConfig(name="LAB271", local_dir="labs", allow_archived=False, hostname_filter="sbp"),
+    OwnerConfig(
+        name="sbp-services",
+        local_dir="services",
+        allow_archived=False,
+        hostname_filter="sbp",
+        repo_allowlist=("sbp-adaptive-learning*",),
+    ),
 ]
 
 
@@ -177,6 +187,13 @@ def get_repos(owner: str, archive: bool = False) -> list[str]:
             filtered_repos.append(str(repo["name"]))
 
     return filtered_repos
+
+
+def filter_repos_by_allowlist(repos: list[str], allowlist: tuple[str, ...] | None) -> list[str]:
+    """Return only repos matching any glob pattern in allowlist. If allowlist is None, return all."""
+    if allowlist is None:
+        return repos
+    return [r for r in repos if any(fnmatch.fnmatch(r, pattern) for pattern in allowlist)]
 
 
 def get_authenticated_user() -> str | None:
@@ -612,7 +629,9 @@ def main(args: list[str] | None = None) -> None:
 
         # Sync active repos
         print(f"Fetching active repository list for {owner}...")
-        active_repos = get_repos(owner=owner, archive=False)
+        active_repos = filter_repos_by_allowlist(
+            get_repos(owner=owner, archive=False), config.repo_allowlist
+        )
         print(f"Found {len(active_repos)} active repositories for {owner}.")
 
         for repo in active_repos:
@@ -640,7 +659,9 @@ def main(args: list[str] | None = None) -> None:
         if parsed_args.include_archive:
             if config.allow_archived:
                 print(f"Fetching archived repository list for {owner}...")
-                archived_repos = get_repos(owner=owner, archive=True)
+                archived_repos = filter_repos_by_allowlist(
+                    get_repos(owner=owner, archive=True), config.repo_allowlist
+                )
                 print(f"Found {len(archived_repos)} archived repositories for {owner}.")
 
                 for repo in archived_repos:

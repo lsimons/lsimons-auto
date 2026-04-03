@@ -14,6 +14,7 @@ from lsimons_auto.actions.git_sync import (
     build_bot_remote_context,
     build_fork_context,
     configure_bot_remote,
+    filter_repos_by_allowlist,
     get_authenticated_user,
     get_command_output,
     get_repos,
@@ -33,6 +34,7 @@ class TestOwnerConfig:
         assert config.local_dir is None
         assert config.allow_archived is True
         assert config.hostname_filter is None
+        assert config.repo_allowlist is None
 
     def test_owner_config_custom_values(self) -> None:
         """Test OwnerConfig with custom values."""
@@ -41,11 +43,42 @@ class TestOwnerConfig:
             local_dir="custom-dir",
             allow_archived=False,
             hostname_filter="myhost",
+            repo_allowlist=("my-repo*",),
         )
         assert config.name == "test-owner"
         assert config.local_dir == "custom-dir"
         assert config.allow_archived is False
         assert config.hostname_filter == "myhost"
+        assert config.repo_allowlist == ("my-repo*",)
+
+
+class TestFilterReposByAllowlist:
+    """Test filter_repos_by_allowlist function."""
+
+    def test_no_allowlist_returns_all(self) -> None:
+        repos = ["repo-a", "repo-b", "repo-c"]
+        assert filter_repos_by_allowlist(repos, None) == repos
+
+    def test_allowlist_exact_match(self) -> None:
+        repos = ["repo-a", "repo-b", "repo-c"]
+        assert filter_repos_by_allowlist(repos, ("repo-a",)) == ["repo-a"]
+
+    def test_allowlist_glob_pattern(self) -> None:
+        repos = ["sbp-adaptive-learning", "sbp-adaptive-learning-settings", "sbp-other"]
+        result = filter_repos_by_allowlist(repos, ("sbp-adaptive-learning*",))
+        assert result == ["sbp-adaptive-learning", "sbp-adaptive-learning-settings"]
+
+    def test_allowlist_multiple_patterns(self) -> None:
+        repos = ["repo-a", "repo-b", "other"]
+        result = filter_repos_by_allowlist(repos, ("repo-a", "other"))
+        assert result == ["repo-a", "other"]
+
+    def test_allowlist_no_matches(self) -> None:
+        repos = ["repo-a", "repo-b"]
+        assert filter_repos_by_allowlist(repos, ("nomatch*",)) == []
+
+    def test_allowlist_empty_repos(self) -> None:
+        assert filter_repos_by_allowlist([], ("pattern*",)) == []
 
 
 class TestForkContext:
