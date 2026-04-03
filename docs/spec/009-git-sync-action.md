@@ -15,6 +15,7 @@
 - Configuration per owner:
   - `local_dir`: Optional custom directory name.
   - `allow_archived`: Whether to allow syncing archived repos (even if flag is set).
+  - `repo_allowlist`: Optional tuple of glob patterns (e.g. `("sbp-adaptive-learning*",)`). If set, only repos matching at least one pattern are synced. Uses `fnmatch` semantics.
 - For each repository:
   - If it doesn't exist locally: `git clone`
   - If it exists locally: `git fetch --all`
@@ -32,6 +33,14 @@
 - Error handling: If `gh` fails, abort. If a single repo fails to sync, log error and continue with others.
 - Path handling: Use `pathlib` for all path manipulations.
 - The action name is `git_sync.py` (maps to `auto git-sync`).
+- Glob filtering: use `fnmatch.fnmatch` to match repo names against `repo_allowlist` patterns. Applied after fetching the full repo list from GitHub.
+
+**Configured Owners:**
+- `lsimons`: all repos, no hostname restriction
+- `lsimons-bot`: all repos, no hostname restriction
+- `typelinkmodel`: all repos, no hostname restriction
+- `LAB271`: `local_dir=labs`, `allow_archived=False`, `hostname_filter="sbp"`
+- `sbp-services`: `local_dir=services`, `allow_archived=False`, `hostname_filter="sbp"`, `repo_allowlist=("sbp-adaptive-learning*",)`
 
 **Fork Remote Configuration (lsimons-bot):**
 - When authenticated as `lsimons-bot`, automatically configures fork remotes using origin/upstream pattern
