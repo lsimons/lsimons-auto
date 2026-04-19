@@ -335,11 +335,32 @@ def configure_bot_remote(repo_path: Path, bot_fork_url: str, dry_run: bool) -> b
         return False
 
 
-def sync_bot_fork(repo_path: Path, owner: str, repo_name: str, dry_run: bool) -> None:
+def fork_slug_from_url(fork_url: str) -> str | None:
+    """Extract '<owner>/<repo>' from a GitHub fork URL, or None if unparseable.
+
+    The fork slug isn't always ``lsimons-bot/<parent_repo>``: when the parent
+    repo name collides with the bot user's profile repo (``lsimons-bot/lsimons-bot``),
+    GitHub renames the fork (e.g. ``lsimons-bot/lsimons-bot-code``).
+    """
+    prefix = "https://github.com/"
+    if not fork_url.startswith(prefix):
+        return None
+    slug = fork_url[len(prefix) :].removesuffix(".git").strip("/")
+    return slug if slug.count("/") == 1 else None
+
+
+def sync_bot_fork(
+    repo_path: Path, owner: str, repo_name: str, bot_fork_url: str, dry_run: bool
+) -> None:
     """
     Attempt to sync the lsimons-bot fork if it's behind origin/main.
     Uses 'gh repo sync' to fast-forward the fork.
     """
+    fork_slug = fork_slug_from_url(bot_fork_url)
+    if fork_slug is None:
+        print(f"  Warning: Could not parse fork slug from {bot_fork_url}, skipping sync")
+        return
+
     # Check if bot/main exists
     bot_main = get_command_output(["git", "rev-parse", "bot/main"], cwd=repo_path)
     if bot_main is None:
@@ -361,30 +382,27 @@ def sync_bot_fork(repo_path: Path, owner: str, repo_name: str, dry_run: bool) ->
     if merge_base == bot_main:
         # bot/main is behind origin/main and can be fast-forwarded
         if dry_run:
-            print(f"  Would sync lsimons-bot/{repo_name} fork to upstream")
+            print(f"  Would sync {fork_slug} fork to upstream")
             return
 
-        print(f"  Syncing lsimons-bot/{repo_name} fork...")
+        print(f"  Syncing {fork_slug} fork...")
         result = subprocess.run(
-            ["gh", "repo", "sync", f"lsimons-bot/{repo_name}", "-b", "main"],
+            ["gh", "repo", "sync", fork_slug, "-b", "main"],
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             text=True,
         )
         if result.returncode != 0:
-            print(f"  Warning: Failed to sync lsimons-bot/{repo_name}: {result.stdout}")
+            print(f"  Warning: Failed to sync {fork_slug}: {result.stdout}")
         else:
             # Re-fetch bot remote to get updated refs
             run_command(["git", "fetch", "bot"], cwd=repo_path)
     elif merge_base == origin_main:
         # origin/main is behind bot/main - bot has extra commits
-        print(f"  Warning: lsimons-bot/{repo_name} has commits ahead of {owner}/{repo_name}")
+        print(f"  Warning: {fork_slug} has commits ahead of {owner}/{repo_name}")
     else:
         # Diverged - cannot fast-forward
-        print(
-            f"  Warning: lsimons-bot/{repo_name} has diverged from {owner}/{repo_name}, "
-            "manual sync required"
-        )
+        print(f"  Warning: {fork_slug} has diverged from {owner}/{repo_name}, manual sync required")
 
 
 def configure_fork_remotes(
@@ -526,7 +544,7 @@ def sync_repo(
             bot_fork_url = bot_context.bot_fork_map[repo_full_name]
             try:
                 if configure_bot_remote(repo_path, bot_fork_url, dry_run):
-                    sync_bot_fork(repo_path, owner, repo_name, dry_run)
+                    sync_bot_fork(repo_path, owner, repo_name, bot_fork_url, dry_run)
             except Exception as e:  # pyright: ignore[reportAny]
                 print(f"Warning: Failed to configure bot remote for {repo_name}: {e}")
 
@@ -654,7 +672,7 @@ def main(args: list[str] | None = None) -> None:
                     if bot_context and repo_full_name in bot_context.bot_fork_map:
                         bot_fork_url = bot_context.bot_fork_map[repo_full_name]
                         configure_bot_remote(repo_path, bot_fork_url, True)
-                        sync_bot_fork(repo_path, owner, repo, True)
+                        sync_bot_fork(repo_path, owner, repo, bot_fork_url, True)
             else:
                 sync_repo(owner, repo, owner_dir, fork_context, bot_context, parsed_args.dry_run)
 
@@ -684,7 +702,7 @@ def main(args: list[str] | None = None) -> None:
                             if bot_context and repo_full_name in bot_context.bot_fork_map:
                                 bot_fork_url = bot_context.bot_fork_map[repo_full_name]
                                 configure_bot_remote(repo_path, bot_fork_url, True)
-                                sync_bot_fork(repo_path, owner, repo, True)
+                                sync_bot_fork(repo_path, owner, repo, bot_fork_url, True)
                     else:
                         sync_repo(
                             owner, repo, archive_dir, fork_context, bot_context, parsed_args.dry_run
