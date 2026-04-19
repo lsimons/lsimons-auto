@@ -6,10 +6,16 @@ Personal automation toolkit for macOS with modular CLI (`auto`) and daily routin
 
 ## Quick Reference
 
-- **Install**: `python3 install.py`
-- **Test**: `uv run pytest` (unit tests) or `uv run pytest -m integration` (integration tests)
-- **Lint**: `uv run ruff check .` and `uv run ruff format --check .` and `uv run basedpyright`
+- **One-time**: `mise install`
+- **Setup**: `mise run install`
+- **Install (system)**: `python3 install.py`
+- **Test (unit)**: `mise run test`
+- **Test (integration)**: `mise run test:integration`
+- **Lint**: `mise run lint` (ruff check + format --check)
+- **Typecheck**: `mise run typecheck` (basedpyright)
+- **Format**: `mise run format`
 - **Run**: `auto <action_name>` or `start-the-day`
+- **Full CI gate**: `mise run ci`
 
 ## Structure
 
@@ -48,10 +54,7 @@ Work is NOT complete until `git push` succeeds.
 
 1. **Quality gates** (if code changed):
    ```bash
-   uv run pytest
-   uv run ruff check .
-   uv run ruff format --check .
-   uv run basedpyright
+   mise run ci
    ```
 
 2. **Push**:

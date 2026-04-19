@@ -1,0 +1,37 @@
+# mise: https://mise.jdx.dev/
+# pyproject.toml's `requires-python` stays authoritative.
+
+[tools]
+python = "3.14"
+uv = "latest"
+
+[env]
+_.file = { path = ".env", optional = true }
+
+[tasks.install]
+description = "uv sync (all groups)"
+run = "uv sync --all-groups"
+
+[tasks.lint]
+description = "ruff check + format --check"
+run = ["uv run ruff check .", "uv run ruff format --check ."]
+
+[tasks.format]
+description = "ruff format + ruff check --fix"
+run = ["uv run ruff format .", "uv run ruff check --fix ."]
+
+[tasks.typecheck]
+description = "basedpyright"
+run = "uv run basedpyright"
+
+[tasks.test]
+description = "pytest (unit tests only)"
+run = "uv run pytest"
+
+[tasks."test:integration"]
+description = "pytest integration tests"
+run = "uv run pytest -m integration"
+
+[tasks.ci]
+description = "Full CI gate"
+depends = ["lint", "typecheck", "test"]
