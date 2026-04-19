@@ -1,0 +1,24 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mise run install)",
+      "Bash(mise run lint)",
+      "Bash(mise run format)",
+      "Bash(mise run typecheck)",
+      "Bash(mise run test)",
+      "Bash(mise run test:integration)",
+      "Bash(mise run ci)",
+      "Bash(mise run install *)",
+      "Bash(mise run lint *)",
+      "Bash(mise run format *)",
+      "Bash(mise run typecheck *)",
+      "Bash(mise run test *)",
+      "Bash(mise run test:integration *)",
+      "Bash(mise run ci *)",
+      "Bash(python3 install.py)",
+      "Bash(python3 install.py *)",
+      "Bash(python3 lsimons_auto/actions/*.py --dry-run)",
+      "Bash(python3 lsimons_auto/actions/*.py --dry-run *)"
+    ]
+  }
+}
