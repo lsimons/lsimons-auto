@@ -175,8 +175,10 @@ def _parse_iso(s: str) -> datetime | None:
 
 
 def classify(state: RepoState) -> str:
-    """Return one of: running, ok, failed, skipped, pending."""
+    """Return one of: running, ok, failed, skipped, pending, none."""
     if state.run is None:
+        if state.note == "no workflows":
+            return "none"
         return "pending"
     if state.run.status in ("queued", "in_progress"):
         return "running"
@@ -209,6 +211,7 @@ _ICONS = {
     "running": ("⋯", "33"),  # yellow
     "skipped": ("-", "2"),  # dim
     "pending": ("·", "2"),  # dim
+    "none": (" ", "2"),  # dim, no workflows
 }
 
 

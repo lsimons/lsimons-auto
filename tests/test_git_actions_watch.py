@@ -61,6 +61,12 @@ def test_classify_no_run() -> None:
     assert classify(s) == "pending"
 
 
+def test_classify_no_workflows() -> None:
+    s = _state("a")
+    s.note = "no workflows"
+    assert classify(s) == "none"
+
+
 def test_exit_code_all_ok() -> None:
     states = [_state("a", run=_run("completed", "success"))]
     assert exit_code(states, allow_running=False) == 0
@@ -114,3 +120,5 @@ def test_render_lines_with_note(monkeypatch: pytest.MonkeyPatch) -> None:
     s.note = "no workflows"
     lines = render_lines([s])
     assert "(no workflows)" in lines[0]
+    assert "none" in lines[0]
+    assert "pending" not in lines[0]
